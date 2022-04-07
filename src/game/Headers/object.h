@@ -7,6 +7,8 @@
 #include <vector>
 #include <glm/vec4.hpp>
 
+#include "matrices.h"
+
 struct GameObject
 {
     GameObject(const char* filename, const char* go_name = NULL, const char* basepath = NULL, bool triangulate = true);
@@ -15,8 +17,6 @@ struct GameObject
     std::vector<tinyobj::shape_t>     shapes;
     std::vector<tinyobj::material_t>  materials;
     std::string go_name;
-
-    void ComputeNormals();
 };
 
 struct Player : public GameObject
