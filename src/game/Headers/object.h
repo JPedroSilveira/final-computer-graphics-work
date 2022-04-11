@@ -7,8 +7,6 @@
 #include <vector>
 #include <glm/vec4.hpp>
 
-#include "matrices.h"
-
 struct GameObject
 {
     GameObject(const char* filename, const char* go_name = NULL, const char* basepath = NULL, bool triangulate = true);
