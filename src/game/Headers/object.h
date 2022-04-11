@@ -19,9 +19,6 @@ struct GameObject
     std::string go_name;
 };
 
-struct Player : public GameObject
-{
 
-};
 
 #endif // OBJECT_H
