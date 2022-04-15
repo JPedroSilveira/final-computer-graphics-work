@@ -57,15 +57,15 @@ void PopMatrix(glm::mat4& M);
 
 // Declaração de várias funções utilizadas em main().  Essas estão definidas
 // logo após a definição de main() neste arquivo.
-void BuildTrianglesAndAddToVirtualScene(GameObject*); // Constrói representação de um GameObject como malha de triângulos para renderização
-void ComputeNormals(GameObject* model); // Computa normais de um GameObject, caso não existam.
+void BuildTrianglesAndAddToVirtualScene(GameModel* model); // Constrói representação de um gameModel como malha de triângulos para renderização
+void ComputeNormals(GameModel* model); // Computa normais de um GameModel, caso não existam.
 void LoadShadersFromFiles(); // Carrega os shaders de vértice e fragmento, criando um programa de GPU
 void DrawVirtualObject(const char* object_name); // Desenha um objeto armazenado em g_VirtualScene
 GLuint LoadShader_Vertex(const char* filename);   // Carrega um vertex shader
 GLuint LoadShader_Fragment(const char* filename); // Carrega um fragment shader
 void LoadShader(const char* filename, GLuint shader_id); // Função utilizada pelas duas acima
 GLuint CreateGpuProgram(GLuint vertex_shader_id, GLuint fragment_shader_id); // Cria um programa de GPU
-void PrintGameObjectInfo(GameObject*); // Função para debugging
+void PrintGameObjectInfo(GameModel*); // Função para debugging
 
 // Declaração de funções auxiliares para renderizar texto dentro da janela
 // OpenGL. Estas funções estão definidas no arquivo "textrendering.cpp".
@@ -228,21 +228,21 @@ int main(int argc, char* argv[])
     LoadShadersFromFiles();
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
-    GameObject spheremodel("../../data/chicken.obj", "chicken");
+    GameModel spheremodel("../../data/chicken.obj", "chicken");
     ComputeNormals(&spheremodel);
     BuildTrianglesAndAddToVirtualScene(&spheremodel);
 
-    GameObject bunnymodel("../../data/bunny.obj", "bunny");
+    GameModel bunnymodel("../../data/bunny.obj", "bunny");
     ComputeNormals(&bunnymodel);
     BuildTrianglesAndAddToVirtualScene(&bunnymodel);
 
-    GameObject planemodel("../../data/plane.obj", "plane");
+    GameModel planemodel("../../data/plane.obj", "plane");
     ComputeNormals(&planemodel);
     BuildTrianglesAndAddToVirtualScene(&planemodel);
 
     if ( argc > 1 )
     {
-        GameObject model(argv[1]);
+        GameModel model(argv[1]);
         BuildTrianglesAndAddToVirtualScene(&model);
     }
 
@@ -262,6 +262,16 @@ int main(int argc, char* argv[])
     glm::mat4 the_projection;
     glm::mat4 the_model;
     glm::mat4 the_view;
+
+    // Criando as instâncias
+    std::vector<GameObject> objects = {};
+
+    GameObject chicken("aa", spheremodel, glm::vec3(-1.0f,1.5f,1.0f), glm::vec3(1.0f,1.0f,1.0f), glm::vec3(0,0,0));
+    chicken.type=CHICKEN;
+    GameObject bunny("ab", bunnymodel, glm::vec3(-0.0f,-0.0f,0.0f), glm::vec3(0.5f,0.5f,0.5f), glm::vec3(0,0,0));
+    bunny.type=BUNNY;
+    objects.push_back(chicken);
+    objects.push_back(bunny);
 
     // Ficamos em loop, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
@@ -341,24 +351,18 @@ int main(int argc, char* argv[])
         glUniformMatrix4fv(view_uniform       , 1 , GL_FALSE , glm::value_ptr(view));
         glUniformMatrix4fv(projection_uniform , 1 , GL_FALSE , glm::value_ptr(projection));
 
-        #define SPHERE 0
-        #define BUNNY  1
-        #define PLANE  2
-
-        // Desenhamos o modelo da esfera
-        model = matrices::Matrix_Translate(-1.0f,-1.0f,0.0f);
-        glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(object_id_uniform, SPHERE);
-        DrawVirtualObject(spheremodel.go_name.c_str());
-
-        // Desenhamos o modelo do coelho
-        model = matrices::Matrix_Translate(1.0f,0.0f,0.0f) 
-              * matrices::Matrix_Rotate_Z(g_AngleZ) 
-              * matrices::Matrix_Rotate_Y(g_AngleY) 
-              * matrices::Matrix_Rotate_X(g_AngleX);
-        glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(object_id_uniform, BUNNY);
-        DrawVirtualObject("bunny");
+        for (auto obj : objects)
+        {
+            auto pos = matrices::Matrix_Translate(obj.position.x, obj.position.y, obj.position.z);
+            auto sca = matrices::Matrix_Scale(obj.scale.x, obj.scale.y, obj.scale.z);
+            auto rot = matrices::Matrix_Rotate_X(obj.rotation.x)*
+                       matrices::Matrix_Rotate_Y(obj.rotation.y)*
+                       matrices::Matrix_Rotate_Z(obj.rotation.z);
+            model = pos*sca*rot;
+            glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+            glUniform1i(object_id_uniform, obj.type);
+            DrawVirtualObject(obj.model.go_name.c_str());
+        }
 
         // Desenhamos o modelo do plano
         model = matrices::Matrix_Translate(0.0f,-1.0f,0.0f)
@@ -495,9 +499,9 @@ void PopMatrix(glm::mat4& M)
     }
 }
 
-// Função que computa as normais de um GameObject, caso elas não tenham sido
+// Função que computa as normais de um GameModel, caso elas não tenham sido
 // especificadas dentro do arquivo ".obj"
-void ComputeNormals(GameObject* model)
+void ComputeNormals(GameModel* model)
 {
     if ( !model->attrib.normals.empty() )
         return;
@@ -560,8 +564,8 @@ void ComputeNormals(GameObject* model)
     }
 }
 
-// Constrói triângulos para futura renderização a partir de um GameObject.
-void BuildTrianglesAndAddToVirtualScene(GameObject* model)
+// Constrói triângulos para futura renderização a partir de um GameModel.
+void BuildTrianglesAndAddToVirtualScene(GameModel* model)
 {
     GLuint vertex_array_object_id;
     glGenVertexArrays(1, &vertex_array_object_id);
@@ -598,7 +602,7 @@ void BuildTrianglesAndAddToVirtualScene(GameObject* model)
 
                 // Inspecionando o código da tinyobjloader, o aluno Bernardo
                 // Sulzbach (2017/1) apontou que a maneira correta de testar se
-                // existem normais e coordenadas de textura no GameObject é
+                // existem normais e coordenadas de textura no GameModel é
                 // comparando se o índice retornado é -1. Fazemos isso abaixo.
 
                 if ( idx.normal_index != -1 )
@@ -1192,7 +1196,7 @@ void TextRendering_ShowFramesPerSecond(GLFWwindow* window)
 // Função para debugging: imprime no terminal todas informações de um modelo
 // geométrico carregado de um arquivo ".obj".
 // Veja: https://github.com/syoyo/tinyobjloader/blob/22883def8db9ef1f3ffb9b404318e7dd25fdbb51/loader_example.cc#L98
-void PrintGameObjectInfo(GameObject* model)
+void PrintGameObjectInfo(GameModel* model)
 {
   const tinyobj::attrib_t                & attrib    = model->attrib;
   const std::vector<tinyobj::shape_t>    & shapes    = model->shapes;

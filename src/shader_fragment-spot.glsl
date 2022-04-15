@@ -18,6 +18,8 @@ uniform mat4 projection;
 #define PLANE  2
 uniform int object_id;
 
+#define PI 3.141592653
+
 // O valor de saída ("out") de um Fragment Shader é a cor final do fragmento.
 out vec4 color;
 
@@ -40,13 +42,20 @@ void main()
     vec4 n = normalize(normal);
 
     // Vetor que define o sentido da fonte de luz em relação ao ponto atual.
-    vec4 l = normalize(vec4(1.0,1.0,0.5,0.0));
+    vec4 light_pos = vec4(0.0,2.0,1.0,1.0);
+    vec4 light_vec = vec4(0.0,-1.0,0.0,0.0);
+
+    vec4 l = normalize(light_pos - p);
+    vec4 anti_l = normalize(p - light_pos);
+    
+    float alpha_cos = cos(PI / 6);
+    float beta_cos  = dot(anti_l, light_vec);
 
     // Vetor que define o sentido da câmera em relação ao ponto atual.
     vec4 v = normalize(camera_position - p);
 
     // Vetor que define o sentido da reflexão especular ideal.
-    vec4 r = (-l) + 2 * n * dot(n, l); // PREENCHA AQUI o vetor de reflexão especular ideal
+    vec4 r = -l + 2 * n * dot(n, l); // PREENCHA AQUI o vetor de reflexão especular ideal
 
     // Parâmetros que definem as propriedades espectrais da superfície
     vec3 Kd; // Refletância difusa
@@ -90,7 +99,11 @@ void main()
     }
 
     // Espectro da fonte de iluminação
-    vec3 I = vec3(1.0,1.0,1.0); // PREENCH AQUI o espectro da fonte de luz
+    vec3 I = vec3(1.0,1.0,1.0); // PREENCHA AQUI o espectro da fonte de luz
+    if (beta_cos < alpha_cos)
+    {
+        I = vec3(0.0, 0.0, 0.0);
+    }
 
     // Espectro da luz ambiente
     vec3 Ia = vec3(0.2, 0.2, 0.2); // PREENCHA AQUI o espectro da luz ambiente

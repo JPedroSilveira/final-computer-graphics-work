@@ -1,6 +1,7 @@
 #include "../Headers/object.h"
+// #include "matrices.h"
 
-GameObject::GameObject(const char* filename, const char* object_name, const char* basepath, bool triangulate)
+GameModel::GameModel(const char* filename, const char* object_name, const char* basepath, bool triangulate)
 {
     printf("Carregando modelo \"%s\"... ", filename);
 
@@ -18,8 +19,11 @@ GameObject::GameObject(const char* filename, const char* object_name, const char
     this->go_name = std::string(object_name);
 }
 
-GameObject::~GameObject()
+GameModel::~GameModel()
 {
     //dtor
 }
 
+
+GameObject::GameObject(std::string name, GameModel& model, glm::vec3 position, glm::vec3 scale, glm::vec3 rotation, GameObject* father)
+ : name(name), model(model), position(position), scale(scale), rotation(rotation), father(father) {}
