@@ -302,17 +302,17 @@ int main(int argc, char* argv[])
     // Criando as instâncias
     std::vector<GameObject*> objects = {};
 
-    Material chickenGay {
+    Material chicken_mat {
         glm::vec3(0.8,0.0,0.0), // Kd
-        glm::vec3(0.0,0.4,0.4),  // Ks
-        glm::vec3(0.4,0.4,0.8),  // Ka
-        32                       // q
+        glm::vec3(0.0,0.4,0.4), // Ks
+        glm::vec3(0.4,0.4,0.8), // Ka
+        32                      // q
     };
 
     GameObject* chicken = new GameObject("player", chickenmodel, glm::vec4(0.0f,0.0f,0.0f,1.0f), glm::vec3(1.0f,1.0f,1.0f), glm::vec3(0,0,0));
     chicken->type=CHICKEN;
     Player player(*chicken, true, 0.4f);
-    player.setMaterial(chickenGay);
+    player.setMaterial(chicken_mat);
     delete chicken;
     
 
@@ -427,13 +427,14 @@ int main(int argc, char* argv[])
             model = pos*sca*rot;
             glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
             glUniform1i(object_id_uniform, obj->type);
-            DrawVirtualObject(obj->model.go_name.c_str());
 
             // Define o material do objeto
             glUniform3f(kd_uniform, obj->material.Kd.x, obj->material.Kd.y, obj->material.Kd.z);
             glUniform3f(ks_uniform, obj->material.Ks.x, obj->material.Ks.y, obj->material.Ks.z);
             glUniform3f(ka_uniform, obj->material.Ka.x, obj->material.Ka.y, obj->material.Ka.z);
             glUniform1f(q_uniform, obj->material.q);
+
+            DrawVirtualObject(obj->model.go_name.c_str());
         }
 
         // Desenhamos o plano do chão
