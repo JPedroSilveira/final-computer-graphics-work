@@ -25,7 +25,16 @@ GameModel::~GameModel()
 
 
 GameObject::GameObject(std::string name, GameModel& model, glm::vec4 position, glm::vec3 scale, glm::vec3 rotation, GameObject* father)
- : name(name), model(model), position(position), scale(scale), rotation(rotation), father(father) {}
+ : name(name), model(model), position(position), scale(scale), rotation(rotation), father(father), material(base_material) {}
+
+
+void GameObject::setMaterial(Material material)
+{
+    this->material.Kd = material.Kd;
+    this->material.Ks = material.Ks;
+    this->material.Ka = material.Ka;
+    this->material.q = material.q;
+}
 
 
 Player::Player(GameObject& object, bool can_move, float speed) :

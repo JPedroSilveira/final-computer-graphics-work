@@ -169,6 +169,12 @@ GLint object_id_uniform;
 GLint bbox_min_uniform;
 GLint bbox_max_uniform;
 
+GLint ks_uniform;
+GLint kd_uniform;
+GLint ka_uniform;
+GLint q_uniform;
+
+
 // Número de texturas carregadas pela função LoadTextureImage()
 GLuint g_NumLoadedTextures = 0;
 
@@ -258,9 +264,9 @@ int main(int argc, char* argv[])
     LoadTextureImage("../../data/ceramic_roof_01_rough_1k.jpg"); // TextureImage3
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
-    GameModel spheremodel("../../data/chicken.obj", "chicken");
-    ComputeNormals(&spheremodel);
-    BuildTrianglesAndAddToVirtualScene(&spheremodel);
+    GameModel chickenmodel("../../data/chicken.obj", "chicken");
+    ComputeNormals(&chickenmodel);
+    BuildTrianglesAndAddToVirtualScene(&chickenmodel);
 
     GameModel bunnymodel("../../data/bunny.obj", "bunny");
     ComputeNormals(&bunnymodel);
@@ -296,9 +302,19 @@ int main(int argc, char* argv[])
     // Criando as instâncias
     std::vector<GameObject*> objects = {};
 
-    GameObject chicken("player", spheremodel, glm::vec4(0.0f,0.0f,0.0f,1.0f), glm::vec3(1.0f,1.0f,1.0f), glm::vec3(0,0,0));
-    chicken.type=CHICKEN;
-    Player player(chicken, true, 0.4f);
+    Material chickenGay {
+        glm::vec3(0.8,0.0,0.0), // Kd
+        glm::vec3(0.0,0.4,0.4),  // Ks
+        glm::vec3(0.4,0.4,0.8),  // Ka
+        32                       // q
+    };
+
+    GameObject* chicken = new GameObject("player", chickenmodel, glm::vec4(0.0f,0.0f,0.0f,1.0f), glm::vec3(1.0f,1.0f,1.0f), glm::vec3(0,0,0));
+    chicken->type=CHICKEN;
+    Player player(*chicken, true, 0.4f);
+    player.setMaterial(chickenGay);
+    delete chicken;
+    
 
     GameObject bunny("aa", bunnymodel, glm::vec4(-1.0f,-1.0f,0.0f,1.0f), glm::vec3(0.5f,0.5f,0.5f), glm::vec3(0,0,0));
     bunny.type=BUNNY;
@@ -412,6 +428,12 @@ int main(int argc, char* argv[])
             glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
             glUniform1i(object_id_uniform, obj->type);
             DrawVirtualObject(obj->model.go_name.c_str());
+
+            // Define o material do objeto
+            glUniform3f(kd_uniform, obj->material.Kd.x, obj->material.Kd.y, obj->material.Kd.z);
+            glUniform3f(ks_uniform, obj->material.Ks.x, obj->material.Ks.y, obj->material.Ks.z);
+            glUniform3f(ka_uniform, obj->material.Ka.x, obj->material.Ka.y, obj->material.Ka.z);
+            glUniform1f(q_uniform, obj->material.q);
         }
 
         // Desenhamos o plano do chão
@@ -527,6 +549,7 @@ void DrawVirtualObject(const char* object_name)
     glm::vec3 bbox_max = g_VirtualScene[object_name].bbox_max;
     glUniform4f(bbox_min_uniform, bbox_min.x, bbox_min.y, bbox_min.z, 1.0f);
     glUniform4f(bbox_max_uniform, bbox_max.x, bbox_max.y, bbox_max.z, 1.0f);
+    
 
     // Pedimos para a GPU rasterizar os vértices dos eixos XYZ
     // apontados pelo VAO como linhas. Veja a definição de
@@ -587,6 +610,11 @@ void LoadShadersFromFiles()
     object_id_uniform       = glGetUniformLocation(program_id, "object_id"); // Variável "object_id" em shader_fragment.glsl
     bbox_min_uniform        = glGetUniformLocation(program_id, "bbox_min");
     bbox_max_uniform        = glGetUniformLocation(program_id, "bbox_max");
+    kd_uniform              = glGetUniformLocation(program_id, "material.Kd");
+    ks_uniform              = glGetUniformLocation(program_id, "material.Ks");
+    ka_uniform              = glGetUniformLocation(program_id, "material.Ka");
+    q_uniform               = glGetUniformLocation(program_id, "material.q");
+
 
     // Variáveis em "shader_fragment.glsl" para acesso das imagens de textura
     glUseProgram(program_id);

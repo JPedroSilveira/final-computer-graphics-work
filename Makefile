@@ -6,7 +6,7 @@ GAME_SOURCE_PATH=src/game/Sources
 GAME_HEADER_PATH=src/game/Headers
 
 GAME_SOURCES=$(GAME_SOURCE_PATH)/object.cpp
-GAME_HEADERS=$(GAME_HEADER_PATH)/object.h
+GAME_HEADERS=$(GAME_HEADER_PATH)/object.h $(GAME_HEADER_PATH)/material.h
 
 ./bin/Linux/main: src/main.cpp src/glad.c src/textrendering.cpp $(AUX_HEADERS) $(GAME_HEADERS)
 	mkdir -p bin/Linux

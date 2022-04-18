@@ -9,6 +9,8 @@
 #include <glm/vec4.hpp>
 #include <glm/vec3.hpp>
 
+#include "material.h"
+
 enum {
     CHICKEN=0,
     BUNNY,
@@ -46,6 +48,9 @@ struct GameObject {
     glm::vec3 rotation;
     int type;
     GameObject* father;
+    Material material;
+
+    void setMaterial(Material material);
 };
 
 struct Player : public GameObject {
