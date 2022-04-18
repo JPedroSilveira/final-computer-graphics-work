@@ -5,7 +5,7 @@
 //    INF01047 Fundamentos de Computação Gráfica
 //               Prof. Eduardo Gastal
 //
-//                   LABORATÓRIO 4
+//                   LABORATÓRIO 5
 //
 
 // Arquivos "headers" padrões de C podem ser incluídos em um
@@ -42,14 +42,16 @@
 // Headers da biblioteca para carregar modelos obj
 #include <tiny_obj_loader.h>
 
+#include <stb_image.h>
+
 // Headers locais, definidos na pasta "include/"
 #include "utils.h"
 #include "matrices.h"
-// using namespace matrices;
 
 // Headers do jogo
 #include "game/Headers/object.h"
 
+using namespace matrices;
 
 // Declaração de funções utilizadas para pilha de matrizes de modelagem.
 void PushMatrix(glm::mat4 M);
@@ -57,15 +59,16 @@ void PopMatrix(glm::mat4& M);
 
 // Declaração de várias funções utilizadas em main().  Essas estão definidas
 // logo após a definição de main() neste arquivo.
-void BuildTrianglesAndAddToVirtualScene(GameModel* model); // Constrói representação de um gameModel como malha de triângulos para renderização
+void BuildTrianglesAndAddToVirtualScene(GameModel*); // Constrói representação de um GameModel como malha de triângulos para renderização
 void ComputeNormals(GameModel* model); // Computa normais de um GameModel, caso não existam.
 void LoadShadersFromFiles(); // Carrega os shaders de vértice e fragmento, criando um programa de GPU
+void LoadTextureImage(const char* filename); // Função que carrega imagens de textura
 void DrawVirtualObject(const char* object_name); // Desenha um objeto armazenado em g_VirtualScene
 GLuint LoadShader_Vertex(const char* filename);   // Carrega um vertex shader
 GLuint LoadShader_Fragment(const char* filename); // Carrega um fragment shader
 void LoadShader(const char* filename, GLuint shader_id); // Função utilizada pelas duas acima
 GLuint CreateGpuProgram(GLuint vertex_shader_id, GLuint fragment_shader_id); // Cria um programa de GPU
-void PrintGameObjectInfo(GameModel*); // Função para debugging
+void PrintObjModelInfo(GameModel*); // Função para debugging
 
 // Declaração de funções auxiliares para renderizar texto dentro da janela
 // OpenGL. Estas funções estão definidas no arquivo "textrendering.cpp".
@@ -104,6 +107,8 @@ struct SceneObject
     size_t       num_indices; // Número de índices do objeto dentro do vetor indices[] definido em BuildTrianglesAndAddToVirtualScene()
     GLenum       rendering_mode; // Modo de rasterização (GL_TRIANGLES, GL_TRIANGLE_STRIP, etc.)
     GLuint       vertex_array_object_id; // ID do VAO onde estão armazenados os atributos do modelo
+    glm::vec3    bbox_min; // Axis-Aligned Bounding Box do objeto
+    glm::vec3    bbox_max;
 };
 
 // Abaixo definimos variáveis globais utilizadas em várias funções do código.
@@ -139,6 +144,14 @@ float g_CameraTheta = 0.0f; // Ângulo no plano ZX em relação ao eixo Z
 float g_CameraPhi = 0.0f;   // Ângulo em relação ao eixo Y
 float g_CameraDistance = 3.5f; // Distância da câmera para a origem
 
+// Variáveis que controlam rotação do antebraço
+float g_ForearmAngleZ = 0.0f;
+float g_ForearmAngleX = 0.0f;
+
+// Variáveis que controlam translação do torso
+float g_TorsoPositionX = 0.0f;
+float g_TorsoPositionY = 0.0f;
+
 // Variável que controla o tipo de projeção utilizada: perspectiva ou ortográfica.
 bool g_UsePerspectiveProjection = true;
 
@@ -153,6 +166,11 @@ GLint model_uniform;
 GLint view_uniform;
 GLint projection_uniform;
 GLint object_id_uniform;
+GLint bbox_min_uniform;
+GLint bbox_max_uniform;
+
+// Número de texturas carregadas pela função LoadTextureImage()
+GLuint g_NumLoadedTextures = 0;
 
 // Variáveis para controle de tecla apertada
 bool g_w_down = false;
@@ -233,6 +251,12 @@ int main(int argc, char* argv[])
     //
     LoadShadersFromFiles();
 
+    // Carregamos duas imagens para serem utilizadas como textura
+    LoadTextureImage("../../data/tc-earth_daymap_surface.jpg");      // TextureImage0
+    LoadTextureImage("../../data/tc-earth_nightmap_citylights.gif"); // TextureImage1
+    LoadTextureImage("../../data/ceramic_roof_01_diff_1k.jpg"); // TextureImage2
+    LoadTextureImage("../../data/ceramic_roof_01_rough_1k.jpg"); // TextureImage3
+
     // Construímos a representação de objetos geométricos através de malhas de triângulos
     GameModel spheremodel("../../data/chicken.obj", "chicken");
     ComputeNormals(&spheremodel);
@@ -287,9 +311,8 @@ int main(int argc, char* argv[])
     player_keys.emplace(X_DOWN, &g_s_down);
     player_keys.emplace(Z_UP, &g_d_down);
     player_keys.emplace(Z_DOWN, &g_a_down);
-
+    
     float prev_time = (float)glfwGetTime();
-       
     // Ficamos em loop, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
     {
@@ -298,25 +321,8 @@ int main(int argc, char* argv[])
         float current_time = (float)glfwGetTime();
         float delta_t = current_time - prev_time;
         prev_time = current_time;
-
         player.updateMovement(player_keys, delta_t);
-        
-        // if (g_w_down)
-        // {
-        //     bunny.position.z += 0.3 * delta_t;
-        // }
-        // else if (g_s_down)
-        // {
-        //     bunny.position.z -= 0.3 * delta_t;
-        // }
-        // if (g_d_down)
-        // {
-        //     bunny.position.x += 0.3 * delta_t;
-        // }
-        // else if (g_a_down)
-        // {
-        //     bunny.position.x -= 0.3 * delta_t;
-        // }
+
 
         // Aqui executamos as operações de renderização
 
@@ -349,13 +355,13 @@ int main(int argc, char* argv[])
         // Veja slides 195-227 e 229-234 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
         glm::vec4 p = player.position;
         glm::vec4 camera_position_c  = glm::vec4(p.x+x,p.y+y,p.z+z,1.0f); // Ponto "c", centro da câmera
-        glm::vec4 camera_lookat_l    = p + glm::vec4(0.0f,2.0f,0.0f,0.0f); // Ponto "l", para onde a câmera (look-at) estará sempre olhando
+        glm::vec4 camera_lookat_l    = p + glm::vec4(0.0f,1.0f,0.0f,0.0f); // Ponto "l", para onde a câmera (look-at) estará sempre olhando
         glm::vec4 camera_view_vector = camera_lookat_l - camera_position_c; // Vetor "view", sentido para onde a câmera está virada
         glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eito Y global)
 
         // Computamos a matriz "View" utilizando os parâmetros da câmera para
         // definir o sistema de coordenadas da câmera.  Veja slides 2-14, 184-190 e 236-242 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
-        glm::mat4 view = matrices::Matrix_Camera_View(camera_position_c, camera_view_vector, camera_up_vector);
+        glm::mat4 view = Matrix_Camera_View(camera_position_c, camera_view_vector, camera_up_vector);
 
         // Agora computamos a matriz de Projeção.
         glm::mat4 projection;
@@ -370,7 +376,7 @@ int main(int argc, char* argv[])
             // Projeção Perspectiva.
             // Para definição do field of view (FOV), veja slides 205-215 do documento Aula_09_Projecoes.pdf.
             float field_of_view = 3.141592 / 3.0f;
-            projection = matrices::Matrix_Perspective(field_of_view, g_ScreenRatio, nearplane, farplane);
+            projection = Matrix_Perspective(field_of_view, g_ScreenRatio, nearplane, farplane);
         }
         else
         {
@@ -383,10 +389,10 @@ int main(int argc, char* argv[])
             float b = -t;
             float r = t*g_ScreenRatio;
             float l = -r;
-            projection = matrices::Matrix_Orthographic(l, r, b, t, nearplane, farplane);
+            projection = Matrix_Orthographic(l, r, b, t, nearplane, farplane);
         }
 
-        glm::mat4 model = matrices::Matrix_Identity(); // Transformação identidade de modelagem
+        glm::mat4 model = Matrix_Identity(); // Transformação identidade de modelagem
 
         // Enviamos as matrizes "view" e "projection" para a placa de vídeo
         // (GPU). Veja o arquivo "shader_vertex.glsl", onde estas são
@@ -394,6 +400,7 @@ int main(int argc, char* argv[])
         glUniformMatrix4fv(view_uniform       , 1 , GL_FALSE , glm::value_ptr(view));
         glUniformMatrix4fv(projection_uniform , 1 , GL_FALSE , glm::value_ptr(projection));
 
+        // Aqui, desenhamos cada objeto de acordo com seu estado
         for (auto obj : objects)
         {
             auto pos = matrices::Matrix_Translate(obj->position.x, obj->position.y, obj->position.z);
@@ -407,10 +414,9 @@ int main(int argc, char* argv[])
             DrawVirtualObject(obj->model.go_name.c_str());
         }
 
-        // Desenhamos o modelo do plano
-        model = matrices::Matrix_Translate(0.0f,-1.0f,0.0f)
-              * matrices::Matrix_Scale(2.0f,1.0f,2.0f);
-        glUniformMatrix4fv(model_uniform, 1 , GL_FALSE, glm::value_ptr(model));
+        // Desenhamos o plano do chão
+        model = Matrix_Translate(0.0f,-1.1f,0.0f);
+        glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(object_id_uniform, PLANE);
         DrawVirtualObject("plane");
 
@@ -454,6 +460,58 @@ int main(int argc, char* argv[])
     return 0;
 }
 
+// Função que carrega uma imagem para ser utilizada como textura
+void LoadTextureImage(const char* filename)
+{
+    printf("Carregando imagem \"%s\"... ", filename);
+
+    // Primeiro fazemos a leitura da imagem do disco
+    stbi_set_flip_vertically_on_load(true);
+    int width;
+    int height;
+    int channels;
+    unsigned char *data = stbi_load(filename, &width, &height, &channels, 3);
+
+    if ( data == NULL )
+    {
+        fprintf(stderr, "ERROR: Cannot open image file \"%s\".\n", filename);
+        std::exit(EXIT_FAILURE);
+    }
+
+    printf("OK (%dx%d).\n", width, height);
+
+    // Agora criamos objetos na GPU com OpenGL para armazenar a textura
+    GLuint texture_id;
+    GLuint sampler_id;
+    glGenTextures(1, &texture_id);
+    glGenSamplers(1, &sampler_id);
+
+    // Veja slides 95-96 do documento Aula_20_Mapeamento_de_Texturas.pdf
+    glSamplerParameteri(sampler_id, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glSamplerParameteri(sampler_id, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    // Parâmetros de amostragem da textura.
+    glSamplerParameteri(sampler_id, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glSamplerParameteri(sampler_id, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // Agora enviamos a imagem lida do disco para a GPU
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+    glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
+    glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
+
+    GLuint textureunit = g_NumLoadedTextures;
+    glActiveTexture(GL_TEXTURE0 + textureunit);
+    glBindTexture(GL_TEXTURE_2D, texture_id);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB8, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glBindSampler(textureunit, sampler_id);
+
+    stbi_image_free(data);
+
+    g_NumLoadedTextures += 1;
+}
+
 // Função que desenha um objeto armazenado em g_VirtualScene. Veja definição
 // dos objetos na função BuildTrianglesAndAddToVirtualScene().
 void DrawVirtualObject(const char* object_name)
@@ -462,6 +520,13 @@ void DrawVirtualObject(const char* object_name)
     // vértices apontados pelo VAO criado pela função BuildTrianglesAndAddToVirtualScene(). Veja
     // comentários detalhados dentro da definição de BuildTrianglesAndAddToVirtualScene().
     glBindVertexArray(g_VirtualScene[object_name].vertex_array_object_id);
+
+    // Setamos as variáveis "bbox_min" e "bbox_max" do fragment shader
+    // com os parâmetros da axis-aligned bounding box (AABB) do modelo.
+    glm::vec3 bbox_min = g_VirtualScene[object_name].bbox_min;
+    glm::vec3 bbox_max = g_VirtualScene[object_name].bbox_max;
+    glUniform4f(bbox_min_uniform, bbox_min.x, bbox_min.y, bbox_min.z, 1.0f);
+    glUniform4f(bbox_max_uniform, bbox_max.x, bbox_max.y, bbox_max.z, 1.0f);
 
     // Pedimos para a GPU rasterizar os vértices dos eixos XYZ
     // apontados pelo VAO como linhas. Veja a definição de
@@ -520,6 +585,15 @@ void LoadShadersFromFiles()
     view_uniform            = glGetUniformLocation(program_id, "view"); // Variável da matriz "view" em shader_vertex.glsl
     projection_uniform      = glGetUniformLocation(program_id, "projection"); // Variável da matriz "projection" em shader_vertex.glsl
     object_id_uniform       = glGetUniformLocation(program_id, "object_id"); // Variável "object_id" em shader_fragment.glsl
+    bbox_min_uniform        = glGetUniformLocation(program_id, "bbox_min");
+    bbox_max_uniform        = glGetUniformLocation(program_id, "bbox_max");
+
+    // Variáveis em "shader_fragment.glsl" para acesso das imagens de textura
+    glUseProgram(program_id);
+    glUniform1i(glGetUniformLocation(program_id, "TextureImage0"), 0);
+    glUniform1i(glGetUniformLocation(program_id, "TextureImage1"), 1);
+    glUniform1i(glGetUniformLocation(program_id, "TextureImage2"), 2);
+    glUseProgram(0);
 }
 
 // Função que pega a matriz M e guarda a mesma no topo da pilha
@@ -533,7 +607,7 @@ void PopMatrix(glm::mat4& M)
 {
     if ( g_MatrixStack.empty() )
     {
-        M = matrices::Matrix_Identity();
+        M = Matrix_Identity();
     }
     else
     {
@@ -581,9 +655,7 @@ void ComputeNormals(GameModel* model)
             const glm::vec4  b = vertices[1];
             const glm::vec4  c = vertices[2];
 
-            // PREENCHA AQUI o cálculo da normal de um triângulo cujos vértices FEITO
-            // estão nos pontos "a", "b", e "c", definidos no sentido anti-horário.
-            const glm::vec4  n = matrices::crossproduct(b-a,c-a);
+            const glm::vec4  n = crossproduct(b-a,c-a);
 
             for (size_t vertex = 0; vertex < 3; ++vertex)
             {
@@ -600,7 +672,7 @@ void ComputeNormals(GameModel* model)
     for (size_t i = 0; i < vertex_normals.size(); ++i)
     {
         glm::vec4 n = vertex_normals[i] / (float)num_triangles_per_vertex[i];
-        n /= matrices::norm(n);
+        n /= norm(n);
         model->attrib.normals[3*i + 0] = n.x;
         model->attrib.normals[3*i + 1] = n.y;
         model->attrib.normals[3*i + 2] = n.z;
@@ -624,6 +696,12 @@ void BuildTrianglesAndAddToVirtualScene(GameModel* model)
         size_t first_index = indices.size();
         size_t num_triangles = model->shapes[shape].mesh.num_face_vertices.size();
 
+        const float minval = std::numeric_limits<float>::min();
+        const float maxval = std::numeric_limits<float>::max();
+
+        glm::vec3 bbox_min = glm::vec3(maxval,maxval,maxval);
+        glm::vec3 bbox_max = glm::vec3(minval,minval,minval);
+
         for (size_t triangle = 0; triangle < num_triangles; ++triangle)
         {
             assert(model->shapes[shape].mesh.num_face_vertices[triangle] == 3);
@@ -642,6 +720,13 @@ void BuildTrianglesAndAddToVirtualScene(GameModel* model)
                 model_coefficients.push_back( vy ); // Y
                 model_coefficients.push_back( vz ); // Z
                 model_coefficients.push_back( 1.0f ); // W
+
+                bbox_min.x = std::min(bbox_min.x, vx);
+                bbox_min.y = std::min(bbox_min.y, vy);
+                bbox_min.z = std::min(bbox_min.z, vz);
+                bbox_max.x = std::max(bbox_max.x, vx);
+                bbox_max.y = std::max(bbox_max.y, vy);
+                bbox_max.z = std::max(bbox_max.z, vz);
 
                 // Inspecionando o código da tinyobjloader, o aluno Bernardo
                 // Sulzbach (2017/1) apontou que a maneira correta de testar se
@@ -677,6 +762,9 @@ void BuildTrianglesAndAddToVirtualScene(GameModel* model)
         theobject.num_indices    = last_index - first_index + 1; // Número de indices
         theobject.rendering_mode = GL_TRIANGLES;       // Índices correspondem ao tipo de rasterização GL_TRIANGLES.
         theobject.vertex_array_object_id = vertex_array_object_id;
+
+        theobject.bbox_min = bbox_min;
+        theobject.bbox_max = bbox_max;
 
         g_VirtualScene[model->shapes[shape].name] = theobject;
     }
@@ -1001,12 +1089,34 @@ void CursorPosCallback(GLFWwindow* window, double xpos, double ypos)
 
     if (g_RightMouseButtonPressed)
     {
-        0;
+        // Deslocamento do cursor do mouse em x e y de coordenadas de tela!
+        float dx = xpos - g_LastCursorPosX;
+        float dy = ypos - g_LastCursorPosY;
+    
+        // Atualizamos parâmetros da antebraço com os deslocamentos
+        g_ForearmAngleZ -= 0.01f*dx;
+        g_ForearmAngleX += 0.01f*dy;
+    
+        // Atualizamos as variáveis globais para armazenar a posição atual do
+        // cursor como sendo a última posição conhecida do cursor.
+        g_LastCursorPosX = xpos;
+        g_LastCursorPosY = ypos;
     }
 
     if (g_MiddleMouseButtonPressed)
     {
-        0;
+        // Deslocamento do cursor do mouse em x e y de coordenadas de tela!
+        float dx = xpos - g_LastCursorPosX;
+        float dy = ypos - g_LastCursorPosY;
+    
+        // Atualizamos parâmetros da antebraço com os deslocamentos
+        g_TorsoPositionX += 0.01f*dx;
+        g_TorsoPositionY -= 0.01f*dy;
+    
+        // Atualizamos as variáveis globais para armazenar a posição atual do
+        // cursor como sendo a última posição conhecida do cursor.
+        g_LastCursorPosX = xpos;
+        g_LastCursorPosY = ypos;
     }
 }
 
@@ -1067,6 +1177,44 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
         g_AngleZ += (mod & GLFW_MOD_SHIFT) ? -delta : delta;
     }
 
+    // Se o usuário apertar a tecla espaço, resetamos os ângulos de Euler para zero.
+    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
+    {
+        g_AngleX = 0.0f;
+        g_AngleY = 0.0f;
+        g_AngleZ = 0.0f;
+        g_ForearmAngleX = 0.0f;
+        g_ForearmAngleZ = 0.0f;
+        g_TorsoPositionX = 0.0f;
+        g_TorsoPositionY = 0.0f;
+    }
+
+    // Se o usuário apertar a tecla P, utilizamos projeção perspectiva.
+    if (key == GLFW_KEY_P && action == GLFW_PRESS)
+    {
+        g_UsePerspectiveProjection = true;
+    }
+
+    // Se o usuário apertar a tecla O, utilizamos projeção ortográfica.
+    if (key == GLFW_KEY_O && action == GLFW_PRESS)
+    {
+        g_UsePerspectiveProjection = false;
+    }
+
+    // Se o usuário apertar a tecla H, fazemos um "toggle" do texto informativo mostrado na tela.
+    if (key == GLFW_KEY_H && action == GLFW_PRESS)
+    {
+        g_ShowInfoText = !g_ShowInfoText;
+    }
+
+    // Se o usuário apertar a tecla R, recarregamos os shaders dos arquivos "shader_fragment.glsl" e "shader_vertex.glsl".
+    if (key == GLFW_KEY_R && action == GLFW_PRESS)
+    {
+        LoadShadersFromFiles();
+        fprintf(stdout,"Shaders recarregados!\n");
+        fflush(stdout);
+    }
+
     // Teclas de movimento
     if (key == GLFW_KEY_W && action == GLFW_PRESS)
     {
@@ -1102,40 +1250,6 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
     if (key == GLFW_KEY_D && action == GLFW_RELEASE)
     {
         g_d_down = false;
-    }
-
-    // Se o usuário apertar a tecla espaço, resetamos os ângulos de Euler para zero.
-    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
-    {
-        g_AngleX = 0.0f;
-        g_AngleY = 0.0f;
-        g_AngleZ = 0.0f;
-    }
-
-    // Se o usuário apertar a tecla P, utilizamos projeção perspectiva.
-    if (key == GLFW_KEY_P && action == GLFW_PRESS)
-    {
-        g_UsePerspectiveProjection = true;
-    }
-
-    // Se o usuário apertar a tecla O, utilizamos projeção ortográfica.
-    if (key == GLFW_KEY_O && action == GLFW_PRESS)
-    {
-        g_UsePerspectiveProjection = false;
-    }
-
-    // Se o usuário apertar a tecla H, fazemos um "toggle" do texto informativo mostrado na tela.
-    if (key == GLFW_KEY_H && action == GLFW_PRESS)
-    {
-        g_ShowInfoText = !g_ShowInfoText;
-    }
-
-    // Se o usuário apertar a tecla R, recarregamos os shaders dos arquivos "shader_fragment.glsl" e "shader_vertex.glsl".
-    if (key == GLFW_KEY_R && action == GLFW_PRESS)
-    {
-        LoadShadersFromFiles();
-        fprintf(stdout,"Shaders recarregados!\n");
-        fflush(stdout);
     }
 }
 
@@ -1192,7 +1306,7 @@ void TextRendering_ShowModelViewProjection(
     glm::vec2 p = glm::vec2( 0,  0);
     glm::vec2 q = glm::vec2(width, height);
 
-    glm::mat4 viewport_mapping = matrices::Matrix(
+    glm::mat4 viewport_mapping = Matrix(
         (q.x - p.x)/(b.x-a.x), 0.0f, 0.0f, (b.x*p.x - a.x*q.x)/(b.x-a.x),
         0.0f, (q.y - p.y)/(b.y-a.y), 0.0f, (b.y*p.y - a.y*q.y)/(b.y-a.y),
         0.0f , 0.0f , 1.0f , 0.0f ,
@@ -1276,7 +1390,7 @@ void TextRendering_ShowFramesPerSecond(GLFWwindow* window)
 // Função para debugging: imprime no terminal todas informações de um modelo
 // geométrico carregado de um arquivo ".obj".
 // Veja: https://github.com/syoyo/tinyobjloader/blob/22883def8db9ef1f3ffb9b404318e7dd25fdbb51/loader_example.cc#L98
-void PrintGameObjectInfo(GameModel* model)
+void PrintObjModelInfo(GameModel* model)
 {
   const tinyobj::attrib_t                & attrib    = model->attrib;
   const std::vector<tinyobj::shape_t>    & shapes    = model->shapes;

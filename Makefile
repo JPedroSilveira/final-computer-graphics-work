@@ -1,6 +1,6 @@
 FLAGS=-lrt -lm -ldl -lX11 -lpthread -lXrandr -lXinerama -lXxf86vm -lXcursor
-AUX_SOURCES=src/glad.c src/textrendering.cpp src/tiny_obj_loader.cpp ./lib-linux/libglfw3.a 
-AUX_HEADERS=include/matrices.h include/utils.h include/dejavufont.h
+AUX_SOURCES=src/glad.c src/textrendering.cpp src/tiny_obj_loader.cpp src/stb_image.cpp ./lib-linux/libglfw3.a 
+AUX_HEADERS=include/matrices.h include/utils.h include/dejavufont.h include/stb_image.h
 
 GAME_SOURCE_PATH=src/game/Sources
 GAME_HEADER_PATH=src/game/Headers
