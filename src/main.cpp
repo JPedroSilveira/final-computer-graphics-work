@@ -154,6 +154,12 @@ GLint view_uniform;
 GLint projection_uniform;
 GLint object_id_uniform;
 
+// Variáveis para controle de tecla apertada
+bool g_w_down = false;
+bool g_a_down = false;
+bool g_s_down = false;
+bool g_d_down = false;
+
 int main(int argc, char* argv[])
 {
     // Inicializamos a biblioteca GLFW, utilizada para criar uma janela do
@@ -264,18 +270,54 @@ int main(int argc, char* argv[])
     glm::mat4 the_view;
 
     // Criando as instâncias
-    std::vector<GameObject> objects = {};
+    std::vector<GameObject*> objects = {};
 
-    GameObject chicken("aa", spheremodel, glm::vec3(-1.0f,1.5f,1.0f), glm::vec3(1.0f,1.0f,1.0f), glm::vec3(0,0,0));
+    GameObject chicken("player", spheremodel, glm::vec4(0.0f,0.0f,0.0f,1.0f), glm::vec3(1.0f,1.0f,1.0f), glm::vec3(0,0,0));
     chicken.type=CHICKEN;
-    GameObject bunny("ab", bunnymodel, glm::vec3(-0.0f,-0.0f,0.0f), glm::vec3(0.5f,0.5f,0.5f), glm::vec3(0,0,0));
-    bunny.type=BUNNY;
-    objects.push_back(chicken);
-    objects.push_back(bunny);
+    Player player(chicken, true, 0.4f);
 
+    GameObject bunny("aa", bunnymodel, glm::vec4(-1.0f,-1.0f,0.0f,1.0f), glm::vec3(0.5f,0.5f,0.5f), glm::vec3(0,0,0));
+    bunny.type=BUNNY;
+
+    objects.push_back(&player);
+    objects.push_back(&bunny);
+
+    std::map<POSSIBLE_MOV, bool*> player_keys;
+    player_keys.emplace(X_UP, &g_w_down);
+    player_keys.emplace(X_DOWN, &g_s_down);
+    player_keys.emplace(Z_UP, &g_d_down);
+    player_keys.emplace(Z_DOWN, &g_a_down);
+
+    float prev_time = (float)glfwGetTime();
+       
     // Ficamos em loop, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
     {
+        // Aqui atualizamos os valores do que deve ser atualizado
+        // Atualizamos o tempo
+        float current_time = (float)glfwGetTime();
+        float delta_t = current_time - prev_time;
+        prev_time = current_time;
+
+        player.updateMovement(player_keys, delta_t);
+        
+        // if (g_w_down)
+        // {
+        //     bunny.position.z += 0.3 * delta_t;
+        // }
+        // else if (g_s_down)
+        // {
+        //     bunny.position.z -= 0.3 * delta_t;
+        // }
+        // if (g_d_down)
+        // {
+        //     bunny.position.x += 0.3 * delta_t;
+        // }
+        // else if (g_a_down)
+        // {
+        //     bunny.position.x -= 0.3 * delta_t;
+        // }
+
         // Aqui executamos as operações de renderização
 
         // Definimos a cor do "fundo" do framebuffer como branco.  Tal cor é
@@ -305,8 +347,9 @@ int main(int argc, char* argv[])
 
         // Abaixo definimos as varáveis que efetivamente definem a câmera virtual.
         // Veja slides 195-227 e 229-234 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
-        glm::vec4 camera_position_c  = glm::vec4(x,y,z,1.0f); // Ponto "c", centro da câmera
-        glm::vec4 camera_lookat_l    = glm::vec4(0.0f,0.0f,0.0f,1.0f); // Ponto "l", para onde a câmera (look-at) estará sempre olhando
+        glm::vec4 p = player.position;
+        glm::vec4 camera_position_c  = glm::vec4(p.x+x,p.y+y,p.z+z,1.0f); // Ponto "c", centro da câmera
+        glm::vec4 camera_lookat_l    = p + glm::vec4(0.0f,2.0f,0.0f,0.0f); // Ponto "l", para onde a câmera (look-at) estará sempre olhando
         glm::vec4 camera_view_vector = camera_lookat_l - camera_position_c; // Vetor "view", sentido para onde a câmera está virada
         glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eito Y global)
 
@@ -353,15 +396,15 @@ int main(int argc, char* argv[])
 
         for (auto obj : objects)
         {
-            auto pos = matrices::Matrix_Translate(obj.position.x, obj.position.y, obj.position.z);
-            auto sca = matrices::Matrix_Scale(obj.scale.x, obj.scale.y, obj.scale.z);
-            auto rot = matrices::Matrix_Rotate_X(obj.rotation.x)*
-                       matrices::Matrix_Rotate_Y(obj.rotation.y)*
-                       matrices::Matrix_Rotate_Z(obj.rotation.z);
+            auto pos = matrices::Matrix_Translate(obj->position.x, obj->position.y, obj->position.z);
+            auto sca = matrices::Matrix_Scale(obj->scale.x, obj->scale.y, obj->scale.z);
+            auto rot = matrices::Matrix_Rotate_X(obj->rotation.x)*
+                       matrices::Matrix_Rotate_Y(obj->rotation.y)*
+                       matrices::Matrix_Rotate_Z(obj->rotation.z);
             model = pos*sca*rot;
             glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-            glUniform1i(object_id_uniform, obj.type);
-            DrawVirtualObject(obj.model.go_name.c_str());
+            glUniform1i(object_id_uniform, obj->type);
+            DrawVirtualObject(obj->model.go_name.c_str());
         }
 
         // Desenhamos o modelo do plano
@@ -1022,6 +1065,43 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
     if (key == GLFW_KEY_Z && action == GLFW_PRESS)
     {
         g_AngleZ += (mod & GLFW_MOD_SHIFT) ? -delta : delta;
+    }
+
+    // Teclas de movimento
+    if (key == GLFW_KEY_W && action == GLFW_PRESS)
+    {
+        g_w_down = true;
+    }
+    if (key == GLFW_KEY_W && action == GLFW_RELEASE)
+    {
+        g_w_down = false;
+    }
+
+    if (key == GLFW_KEY_A && action == GLFW_PRESS)
+    {
+        g_a_down = true;
+    }
+    if (key == GLFW_KEY_A && action == GLFW_RELEASE)
+    {
+        g_a_down = false;
+    }
+
+    if (key == GLFW_KEY_S && action == GLFW_PRESS)
+    {
+        g_s_down = true;
+    }
+    if (key == GLFW_KEY_S && action == GLFW_RELEASE)
+    {
+        g_s_down = false;
+    }
+
+    if (key == GLFW_KEY_D && action == GLFW_PRESS)
+    {
+        g_d_down = true;
+    }
+    if (key == GLFW_KEY_D && action == GLFW_RELEASE)
+    {
+        g_d_down = false;
     }
 
     // Se o usuário apertar a tecla espaço, resetamos os ângulos de Euler para zero.

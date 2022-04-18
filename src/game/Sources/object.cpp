@@ -1,5 +1,4 @@
 #include "../Headers/object.h"
-// #include "matrices.h"
 
 GameModel::GameModel(const char* filename, const char* object_name, const char* basepath, bool triangulate)
 {
@@ -25,5 +24,32 @@ GameModel::~GameModel()
 }
 
 
-GameObject::GameObject(std::string name, GameModel& model, glm::vec3 position, glm::vec3 scale, glm::vec3 rotation, GameObject* father)
+GameObject::GameObject(std::string name, GameModel& model, glm::vec4 position, glm::vec3 scale, glm::vec3 rotation, GameObject* father)
  : name(name), model(model), position(position), scale(scale), rotation(rotation), father(father) {}
+
+
+Player::Player(GameObject& object, bool can_move, float speed) :
+GameObject(object), can_move(can_move), current_speed(speed), base_speed(speed) {}
+
+void Player::updateMovement(std::map<POSSIBLE_MOV, bool*> pressed_keys, const float delta_t)
+{
+    if (can_move)
+    {
+        if (*pressed_keys[X_UP])
+        {
+            this->position.x += current_speed * delta_t;
+        }
+        if (*pressed_keys[X_DOWN])
+        {
+            this->position.x -= current_speed * delta_t;
+        }
+        if (*pressed_keys[Z_UP])
+        {
+            this->position.z += current_speed * delta_t;
+        }
+        if (*pressed_keys[Z_DOWN])
+        {
+            this->position.z -= current_speed * delta_t;
+        }
+    }
+}
