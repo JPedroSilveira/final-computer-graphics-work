@@ -140,9 +140,11 @@ bool g_MiddleMouseButtonPressed = false; // Análogo para botão do meio do mous
 // usuário através do mouse (veja função CursorPosCallback()). A posição
 // efetiva da câmera é calculada dentro da função main(), dentro do loop de
 // renderização.
-float g_CameraTheta = 0.0f; // Ângulo no plano ZX em relação ao eixo Z
-float g_CameraPhi = 0.0f;   // Ângulo em relação ao eixo Y
-float g_CameraDistance = 3.5f; // Distância da câmera para a origem
+//        g_CameraTheta -= 0.01f*dx;
+//        g_CameraPhi   += 0.01f*dy;
+float g_CameraTheta = 4.71239f; // Ângulo no plano ZX em relação ao eixo Z
+float g_CameraPhi = 0.959931f;   // Ângulo em relação ao eixo Y
+float g_CameraDistance = 4.5f; // Distância da câmera para a origem
 
 // Variáveis que controlam rotação do antebraço
 float g_ForearmAngleZ = 0.0f;
@@ -266,9 +268,9 @@ int main(int argc, char* argv[])
     ComputeNormals(&bunnymodel);
     BuildTrianglesAndAddToVirtualScene(&bunnymodel);
 
-    GameModel planemodel("../../data/plane.obj", "plane");
-    ComputeNormals(&planemodel);
-    BuildTrianglesAndAddToVirtualScene(&planemodel);
+    GameModel pathmodel("../../data/plane.obj", "plane");
+    ComputeNormals(&pathmodel);
+    BuildTrianglesAndAddToVirtualScene(&pathmodel);
 
     if ( argc > 1 )
     {
@@ -296,15 +298,48 @@ int main(int argc, char* argv[])
     // Criando as instâncias
     std::vector<GameObject*> objects = {};
 
-    GameObject chicken("player", spheremodel, glm::vec4(0.0f,0.0f,0.0f,1.0f), glm::vec3(1.0f,1.0f,1.0f), glm::vec3(0,0,0));
+    GameObject chicken("player", spheremodel, glm::vec4(0.0f,-0.1f,0.0f,1.0f), glm::vec3(1.0f,1.0f,1.0f), glm::vec3(0,0.0f,0));
     chicken.type=CHICKEN;
     Player player(chicken, true, 0.4f);
 
-    GameObject bunny("aa", bunnymodel, glm::vec4(-1.0f,-1.0f,0.0f,1.0f), glm::vec3(0.5f,0.5f,0.5f), glm::vec3(0,0,0));
-    bunny.type=BUNNY;
+    GameObject path("path", pathmodel, glm::vec4(8.0f,0.0f,0.0f,1.0f), glm::vec3(10.0f,1.0f,1.0f), glm::vec3(0,0,0));
+    path.type=PLANE;
 
+    objects.push_back(&path);
     objects.push_back(&player);
-    objects.push_back(&bunny);
+
+    float bunnyOneDistance = 4.0f;
+
+    GameObject bunnyOne("bunny_one", bunnymodel, glm::vec4(bunnyOneDistance,0.95f,10.0f,1.0f), glm::vec3(1.0f,1.0f,1.0f), glm::vec3(0,-1.5f,0));
+    bunnyOne.type=BUNNY;
+
+    GameObject bunnyOnePath("bunny_one_path", pathmodel, glm::vec4(bunnyOneDistance - 0.5f,0.0f,0.0f,1.0f), glm::vec3(1.0f,1.0f,12.5f), glm::vec3(0,0,0));
+    bunnyOnePath.type=PLANE;
+
+    objects.push_back(&bunnyOnePath);
+    objects.push_back(&bunnyOne);
+
+    float bunnyTwoDistance = 8.0f;
+
+    GameObject bunnyTwo("bunny_two", bunnymodel, glm::vec4(bunnyTwoDistance,0.95f,10.0f,1.0f), glm::vec3(1.0f,1.0f,1.0f), glm::vec3(0,-1.5f,0));
+    bunnyTwo.type=BUNNY;
+
+    GameObject bunnyTwoPath("bunny_two_path", pathmodel, glm::vec4(bunnyTwoDistance - 0.5f,0.0f,0.0f,1.0f), glm::vec3(1.0f,1.0f,12.5f), glm::vec3(0,0,0));
+    bunnyTwoPath.type=PLANE;
+
+    objects.push_back(&bunnyTwoPath);
+    objects.push_back(&bunnyTwo);
+
+    float bunnyThreeDistance = 12.0f;
+
+    GameObject bunnyThree("bunny_three", bunnymodel, glm::vec4(bunnyThreeDistance,0.95f,10.0f,1.0f), glm::vec3(1.0f,1.0f,1.0f), glm::vec3(0,-1.5f,0));
+    bunnyThree.type=BUNNY;
+
+    GameObject bunnyThreePath("bunny_three_path", pathmodel, glm::vec4(bunnyThreeDistance - 0.5f,0.0f,0.0f,1.0f), glm::vec3(1.0f,1.0f,12.5f), glm::vec3(0,0,0));
+    bunnyThreePath.type=PLANE;
+
+    objects.push_back(&bunnyThreePath);
+    objects.push_back(&bunnyThree);
 
     std::map<POSSIBLE_MOV, bool*> player_keys;
     player_keys.emplace(X_UP, &g_w_down);
@@ -368,14 +403,14 @@ int main(int argc, char* argv[])
 
         // Note que, no sistema de coordenadas da câmera, os planos near e far
         // estão no sentido negativo! Veja slides 176-204 do documento Aula_09_Projecoes.pdf.
-        float nearplane = -0.1f;  // Posição do "near plane"
-        float farplane  = -10.0f; // Posição do "far plane"
+        float nearplane = -0.5f;  // Posição do "near plane"
+        float farplane  = -20.0f; // Posição do "far plane"
 
         if (g_UsePerspectiveProjection)
         {
             // Projeção Perspectiva.
             // Para definição do field of view (FOV), veja slides 205-215 do documento Aula_09_Projecoes.pdf.
-            float field_of_view = 3.141592 / 3.0f;
+            float field_of_view = 3.141592 / 2.0f;
             projection = Matrix_Perspective(field_of_view, g_ScreenRatio, nearplane, farplane);
         }
         else
@@ -415,10 +450,10 @@ int main(int argc, char* argv[])
         }
 
         // Desenhamos o plano do chão
-        model = Matrix_Translate(0.0f,-1.1f,0.0f);
-        glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(object_id_uniform, PLANE);
-        DrawVirtualObject("plane");
+        //model = Matrix_Translate(0.0f,0.0f,0.0f);
+        //glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        //glUniform1i(object_id_uniform, PLANE);
+        //DrawVirtualObject("plane");
 
         // Pegamos um vértice com coordenadas de modelo (0.5, 0.5, 0.5, 1) e o
         // passamos por todos os sistemas de coordenadas armazenados nas
