@@ -1,4 +1,4 @@
-#include "../Headers/object.h"
+ #include "../Headers/object.h"
 
 GameModel::GameModel(const char* filename, const char* object_name, const char* basepath, bool triangulate)
 {
