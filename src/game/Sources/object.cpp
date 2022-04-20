@@ -25,7 +25,8 @@ GameModel::~GameModel()
 
 
 GameObject::GameObject(std::string name, GameModel& model, glm::vec4 position, glm::vec3 scale, glm::vec3 rotation, GameObject* father)
- : name(name), model(model), position(position), scale(scale), rotation(rotation), father(father), material(base_material) {}
+ : name(name), model(model), position(position), scale(scale), rotation(rotation), move_direction(glm::vec4(1,0,0,0)),
+  father(father), material(base_material) {}
 
 
 void GameObject::setMaterial(Material material)
@@ -44,21 +45,23 @@ void Player::updateMovement(std::map<POSSIBLE_MOV, bool*> pressed_keys, const fl
 {
     if (can_move)
     {
-        if (*pressed_keys[X_UP])
+        if (*pressed_keys[FRONT])
         {
-            this->position.x += current_speed * delta_t;
+            glm::vec4 direction(rotation.x, rotation.y, rotation.z, 0);
+            this->position += direction * current_speed * delta_t;
         }
-        if (*pressed_keys[X_DOWN])
+        if (*pressed_keys[BACK])
         {
-            this->position.x -= current_speed * delta_t;
+            glm::vec4 direction(rotation.x, rotation.y, rotation.z, 0);
+            this->position -= direction * current_speed * delta_t;
         }
-        if (*pressed_keys[Z_UP])
+        if (*pressed_keys[RIGHT])
         {
-            this->position.z += current_speed * delta_t;
+            this->rotation.y += current_speed * delta_t;
         }
-        if (*pressed_keys[Z_DOWN])
+        if (*pressed_keys[LEFT])
         {
-            this->position.z -= current_speed * delta_t;
+            this->rotation.z -= current_speed * delta_t;
         }
     }
 }

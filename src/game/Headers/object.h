@@ -18,10 +18,10 @@ enum {
 };
 
 enum POSSIBLE_MOV {
-    X_UP=0,
-    X_DOWN,
-    Z_UP,
-    Z_DOWN,
+    FRONT=0,
+    BACK,
+    RIGHT,
+    LEFT,
     SPEED_UP,
     SPEED_DOWN,
     JUMP
@@ -46,6 +46,7 @@ struct GameObject {
     glm::vec4 position;
     glm::vec3 scale;
     glm::vec3 rotation;
+    glm::vec4 move_direction;
     int type;
     GameObject* father;
     Material material;

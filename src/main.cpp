@@ -323,10 +323,10 @@ int main(int argc, char* argv[])
     objects.push_back(&bunny);
 
     std::map<POSSIBLE_MOV, bool*> player_keys;
-    player_keys.emplace(X_UP, &g_w_down);
-    player_keys.emplace(X_DOWN, &g_s_down);
-    player_keys.emplace(Z_UP, &g_d_down);
-    player_keys.emplace(Z_DOWN, &g_a_down);
+    player_keys.emplace(FRONT, &g_w_down);
+    player_keys.emplace(BACK, &g_s_down);
+    player_keys.emplace(RIGHT, &g_d_down);
+    player_keys.emplace(LEFT, &g_a_down);
     
     float prev_time = (float)glfwGetTime();
     // Ficamos em loop, renderizando, até que o usuário feche a janela
