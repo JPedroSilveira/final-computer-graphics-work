@@ -39,29 +39,38 @@ void GameObject::setMaterial(Material material)
 
 
 Player::Player(GameObject& object, bool can_move, float speed) :
-GameObject(object), can_move(can_move), current_speed(speed), base_speed(speed) {}
+GameObject(object), can_move(can_move), current_speed(speed), base_speed(speed) {
+    this->move_angle = 0;
+}
 
 void Player::updateMovement(std::map<POSSIBLE_MOV, bool*> pressed_keys, const float delta_t)
 {
     if (can_move)
     {
+        // Valores do vetor de movimento
+        float r = current_speed;
+        float x = r*cos(this->move_angle);
+        float z = r*sin(this->move_angle);
+        move_direction = glm::vec4(x,0,z,0);
+
         if (*pressed_keys[FRONT])
         {
-            glm::vec4 direction(rotation.x, rotation.y, rotation.z, 0);
-            this->position += direction * current_speed * delta_t;
+            this->position += move_direction * current_speed * delta_t;
         }
         if (*pressed_keys[BACK])
         {
-            glm::vec4 direction(rotation.x, rotation.y, rotation.z, 0);
-            this->position -= direction * current_speed * delta_t;
+            this->position -= move_direction * current_speed * delta_t;
         }
         if (*pressed_keys[RIGHT])
         {
-            this->rotation.y += current_speed * delta_t;
+            this->rotation.y -= current_speed * delta_t;
+            this->move_angle += current_speed * delta_t;
         }
         if (*pressed_keys[LEFT])
         {
-            this->rotation.z -= current_speed * delta_t;
+            this->rotation.y += current_speed * delta_t;
+            this->move_angle -= current_speed * delta_t;
+
         }
     }
 }

@@ -193,9 +193,7 @@ int main(int argc, char* argv[])
     LoadShadersFromFiles();
 
     // Carregamos duas imagens para serem utilizadas como textura
-    LoadTextureImage("../../data/tc-earth_daymap_surface.jpg");      // TextureImage0
-    LoadTextureImage("../../data/tc-earth_nightmap_citylights.gif"); // TextureImage1
-    LoadTextureImage("../../data/ceramic_roof_01_diff_1k.jpg"); // TextureImage2
+    LoadTextureImage("../../data/grass.jpg");      // TextureImage0
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
     GameModel chickenmodel("../../data/chicken.obj", "chicken");
@@ -232,23 +230,27 @@ int main(int argc, char* argv[])
 
     Material chicken_mat {
         glm::vec3(0.8,0.0,0.0), // Kd - termo difuso (lambert)
-        glm::vec3(0.0,0.4,0.4), // Ks
-        glm::vec3(0.4,0.4,0.8), // Ka - luz ambiente
+        glm::vec3(0.4,0.4,0.4), // Ks
+        glm::vec3(0.4,0.4,0.4), // Ka - luz ambiente
         32                      // q
     };
 
     // Game object chicken criado para facilitar a criação do player
     GameObject* chicken = new GameObject("player", chickenmodel, glm::vec4(0.0f,0.0f,0.0f,1.0f), glm::vec3(1.0f,1.0f,1.0f), glm::vec3(0,0,0));
-    chicken->type=CHICKEN;
-    Player player(*chicken, true, 0.4f);
+    chicken->type=MATERIAL;
+    Player player(*chicken, true, 1.2f);
     player.setMaterial(chicken_mat);
     delete chicken; // GameObject chicken deixa de existir aqui
     
-    GameObject bunny("aa", bunnymodel, glm::vec4(-1.0f,-1.0f,0.0f,1.0f), glm::vec3(0.5f,0.5f,0.5f), glm::vec3(0,0,0));
-    bunny.type=BUNNY;
+    GameObject bunny("enemy0", bunnymodel, glm::vec4(-1.0f,0.0f,0.0f,1.0f), glm::vec3(0.5f,0.5f,0.5f), glm::vec3(0,0,0));
+    bunny.type=MATERIAL;
+
+    GameObject floor("floor", planemodel, glm::vec4(0,-0.1,0,0), glm::vec3(10,1,10), glm::vec3(0,0,0));
+    floor.type=GRASS;
 
     objects.push_back(&player);
     objects.push_back(&bunny);
+    objects.push_back(&floor);
 
     std::map<POSSIBLE_MOV, bool*> player_keys;
     player_keys.emplace(FRONT, &g_w_down);
@@ -265,6 +267,7 @@ int main(int argc, char* argv[])
         float current_time = (float)glfwGetTime();
         float delta_t = current_time - prev_time;
         prev_time = current_time;
+
         player.updateMovement(player_keys, delta_t);
 
 
@@ -288,7 +291,7 @@ int main(int argc, char* argv[])
 
         glm::mat4 projection;
         float nearplane = -0.1f;  // Posição do "near plane"
-        float farplane  = -10.0f; // Posição do "far plane"
+        float farplane  = -20.0f; // Posição do "far plane"
 
         if (g_UsePerspectiveProjection)
         {
@@ -327,15 +330,10 @@ int main(int argc, char* argv[])
             glUniform3f(ka_uniform, obj->material.Ka.x, obj->material.Ka.y, obj->material.Ka.z);
             glUniform1f(q_uniform, obj->material.q);
 
+            glUniform1i(object_id_uniform, obj->type);
+
             DrawVirtualObject(obj->model.go_name.c_str());
         }
-
-        // Desenhamos o plano do chão
-        model = Matrix_Translate(0.0f,-1.1f,0.0f);
-        glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(object_id_uniform, PLANE);
-        DrawVirtualObject("plane");
-
         TextRendering_ShowFramesPerSecond(window);
 
         glfwSwapBuffers(window);
@@ -377,8 +375,8 @@ void LoadTextureImage(const char* filename)
     glGenSamplers(1, &sampler_id);
 
     // Veja slides 95-96 do documento Aula_20_Mapeamento_de_Texturas.pdf
-    glSamplerParameteri(sampler_id, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glSamplerParameteri(sampler_id, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glSamplerParameteri(sampler_id, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glSamplerParameteri(sampler_id, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
     // Parâmetros de amostragem da textura.
     glSamplerParameteri(sampler_id, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
@@ -486,9 +484,7 @@ void LoadShadersFromFiles()
 
     // Variáveis em "shader_fragment.glsl" para acesso das imagens de textura
     glUseProgram(program_id);
-    glUniform1i(glGetUniformLocation(program_id, "TextureImage0"), 0);
-    glUniform1i(glGetUniformLocation(program_id, "TextureImage1"), 1);
-    glUniform1i(glGetUniformLocation(program_id, "TextureImage2"), 2);
+    glUniform1i(glGetUniformLocation(program_id, "Grass"), 0);
     glUseProgram(0);
 }
 

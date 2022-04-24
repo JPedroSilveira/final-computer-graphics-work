@@ -120,7 +120,7 @@ void main()
         U = (position_model.x - minx) / (maxx - minx);
         V = (position_model.y - miny) / (maxy - miny);
 
-        
+        vec3 new_normal = texture(TextureImage2, vec(U,V)).rgb;
     }
     else if ( object_id == PLANE )
     {

@@ -3,6 +3,7 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <cmath>
 #include <tiny_obj_loader.h>
 #include <vector>
 #include <map>
@@ -12,9 +13,8 @@
 #include "material.h"
 
 enum {
-    CHICKEN=0,
-    BUNNY,
-    PLANE
+    MATERIAL=0,
+    GRASS,
 };
 
 enum POSSIBLE_MOV {
@@ -59,6 +59,7 @@ struct Player : public GameObject {
     bool can_move;
     float current_speed;
     float base_speed;
+    float move_angle;
 
     void updateMovement(std::map<POSSIBLE_MOV, bool*> pressed_keys, const float delta_t);
 };
