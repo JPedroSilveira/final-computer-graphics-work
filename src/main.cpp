@@ -97,8 +97,8 @@ float g_ScreenRatio = 1.0f;
 // usuário através do mouse (veja função CursorPosCallback()). A posição
 // efetiva da câmera é calculada dentro da função main(), dentro do loop de
 // renderização.
-float g_CameraTheta = 0.0f; // Ângulo no plano ZX em relação ao eixo Z
-float g_CameraPhi = 0.0f;   // Ângulo em relação ao eixo Y
+float g_CameraTheta = -M_PI_2; // Ângulo no plano ZX em relação ao eixo Z
+float g_CameraPhi = M_PI_4;   // Ângulo em relação ao eixo Y
 float g_CameraDistance = 3.5f; // Distância da câmera para a origem
 
 // Variável que controla o tipo de projeção utilizada: perspectiva ou ortográfica.
@@ -276,14 +276,16 @@ int main(int argc, char* argv[])
         glUseProgram(program_id);
 
         // Valores de câmera (TODO: copiar para player)
-        float r = g_CameraDistance;
-        float y = r*sin(g_CameraPhi);
-        float z = r*cos(g_CameraPhi)*cos(g_CameraTheta);
-        float x = r*cos(g_CameraPhi)*sin(g_CameraTheta);
-
+        g_CameraTheta = - M_PI_2 - player.move_angle;
         glm::vec4 p = player.position;
-        glm::vec4 camera_position_c  = glm::vec4(p.x+x,p.y+y,p.z+z,1.0f); // Ponto "c", centro da câmera
-        glm::vec4 camera_lookat_l    = p + glm::vec4(0.0f,1.0f,0.0f,0.0f); // Ponto "l", para onde a câmera (look-at) estará sempre olhando
+        float r = g_CameraDistance;
+        float y = r*sin(g_CameraPhi) + p.y;
+        float z = r*cos(g_CameraPhi)*cos(g_CameraTheta) + p.z;
+        float x = r*cos(g_CameraPhi)*sin(g_CameraTheta) + p.x;
+
+        glm::vec4 lookat_offset      = glm::vec4(0.0f, 2.0f, 0.0f, 0.0f);
+        glm::vec4 camera_position_c  = glm::vec4(x,y,z,1.0f); // Ponto "c", centro da câmera
+        glm::vec4 camera_lookat_l    = p + lookat_offset; // Ponto "l", para onde a câmera (look-at) estará sempre olhando
         glm::vec4 camera_view_vector = camera_lookat_l - camera_position_c; // Vetor "view", sentido para onde a câmera está virada
         glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eito Y global)
 
@@ -954,12 +956,8 @@ void CursorPosCallback(GLFWwindow* window, double xpos, double ypos)
 
     if (g_LeftMouseButtonPressed)
     {
-        // Deslocamento do cursor do mouse em x e y de coordenadas de tela!
-        float dx = xpos - g_LastCursorPosX;
         float dy = ypos - g_LastCursorPosY;
     
-        // Atualizamos parâmetros da câmera com os deslocamentos
-        g_CameraTheta -= 0.01f*dx;
         g_CameraPhi   += 0.01f*dy;
     
         // Em coordenadas esféricas, o ângulo phi deve ficar entre -pi/2 e +pi/2.
