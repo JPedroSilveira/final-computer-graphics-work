@@ -99,7 +99,7 @@ float g_ScreenRatio = 1.0f;
 // renderização.
 float g_CameraTheta = -M_PI_2; // Ângulo no plano ZX em relação ao eixo Z
 float g_CameraPhi = M_PI_4;   // Ângulo em relação ao eixo Y
-float g_CameraDistance = 3.5f; // Distância da câmera para a origem
+float g_CameraDistance = 5.0f; // Distância da câmera para a origem
 
 // Variável que controla o tipo de projeção utilizada: perspectiva ou ortográfica.
 bool g_UsePerspectiveProjection = true;
@@ -236,13 +236,13 @@ int main(int argc, char* argv[])
     };
 
     // Game object chicken criado para facilitar a criação do player
-    GameObject* chicken = new GameObject("player", chickenmodel, glm::vec4(0.0f,0.0f,0.0f,1.0f), glm::vec3(1.0f,1.0f,1.0f), glm::vec3(0,0,0));
+    GameObject* chicken = new GameObject("player", chickenmodel, glm::vec4(-10.0f,0.0f,0.0f,1.0f), glm::vec3(1.0f,1.0f,1.0f), glm::vec3(0,0,0));
     chicken->type=MATERIAL;
     Player player(*chicken, true, 1.2f);
     player.setMaterial(chicken_mat);
     delete chicken; // GameObject chicken deixa de existir aqui
     
-    GameObject bunny("enemy0", bunnymodel, glm::vec4(-1.0f,0.0f,0.0f,1.0f), glm::vec3(0.5f,0.5f,0.5f), glm::vec3(0,0,0));
+    GameObject bunny("enemy0", bunnymodel, glm::vec4(0.0f,1.0f,0.0f,1.0f), glm::vec3(1.0f,1.0f,1.0f), glm::vec3(0,0,0));
     bunny.type=MATERIAL;
 
     GameObject floor("floor", planemodel, glm::vec4(0,-0.1,0,0), glm::vec3(10,1,10), glm::vec3(0,0,0));
@@ -961,7 +961,7 @@ void CursorPosCallback(GLFWwindow* window, double xpos, double ypos)
         g_CameraPhi   += 0.01f*dy;
     
         // Em coordenadas esféricas, o ângulo phi deve ficar entre -pi/2 e +pi/2.
-        float phimax = 3.141592f/2;
+        float phimax = M_PI_2;
         float phimin = -phimax;
     
         if (g_CameraPhi > phimax)
