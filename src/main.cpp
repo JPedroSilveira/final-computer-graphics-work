@@ -25,6 +25,7 @@
 #include "matrices.h"
 
 #include "game/Headers/object.h"
+#include "game/Headers/collisions.h"
 
 using namespace matrices;
 
@@ -35,7 +36,7 @@ void PopMatrix(glm::mat4& M);
 void BuildTrianglesAndAddToVirtualScene(GameModel*); // Constrói representação de um GameModel como malha de triângulos para renderização
 void ComputeNormals(GameModel* model); // Computa normais de um GameModel, caso não existam.
 void LoadShadersFromFiles(); // Carrega os shaders de vértice e fragmento, criando um programa de GPU
-void LoadTextureImage(const char* filename); // Função que carrega imagens de textura
+void LoadTextureImage(const char* filename, GLint param); // Função que carrega imagens de textura
 void DrawVirtualObject(const char* object_name); // Desenha um objeto armazenado em g_VirtualScene
 GLuint LoadShader_Vertex(const char* filename);   // Carrega um vertex shader
 GLuint LoadShader_Fragment(const char* filename); // Carrega um fragment shader
@@ -193,7 +194,8 @@ int main(int argc, char* argv[])
     LoadShadersFromFiles();
 
     // Carregamos duas imagens para serem utilizadas como textura
-    LoadTextureImage("../../data/grass.jpg");      // TextureImage0
+    LoadTextureImage("../../data/grass.jpg", GL_REPEAT);      // TextureImage0
+    LoadTextureImage("../../data/green_wall.jpg", GL_REPEAT);  // TextureImage1
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
     GameModel chickenmodel("../../data/chicken.obj", "chicken");
@@ -207,6 +209,10 @@ int main(int argc, char* argv[])
     GameModel planemodel("../../data/plane.obj", "plane");
     ComputeNormals(&planemodel);
     BuildTrianglesAndAddToVirtualScene(&planemodel);
+
+    GameModel eggmodel("../../data/egg.obj", "egg");
+    ComputeNormals(&eggmodel);
+    BuildTrianglesAndAddToVirtualScene(&eggmodel);
 
     if ( argc > 1 )
     {
@@ -236,21 +242,41 @@ int main(int argc, char* argv[])
     };
 
     // Game object chicken criado para facilitar a criação do player
-    GameObject* chicken = new GameObject("player", chickenmodel, glm::vec4(-10.0f,0.0f,0.0f,1.0f), glm::vec3(1.0f,1.0f,1.0f), glm::vec3(0,0,0));
+    GameObject* chicken = new GameObject("player", chickenmodel, glm::vec4(-8.0f,0.0f,0.0f,1.0f), glm::vec3(1.0f,1.0f,1.0f), glm::vec3(0,0,0));
     chicken->type=MATERIAL;
     Player player(*chicken, true, 1.2f);
     player.setMaterial(chicken_mat);
     delete chicken; // GameObject chicken deixa de existir aqui
     
-    GameObject bunny("enemy0", bunnymodel, glm::vec4(0.0f,1.0f,0.0f,1.0f), glm::vec3(1.0f,1.0f,1.0f), glm::vec3(0,0,0));
+    GameObject bunny("enemy0", bunnymodel, glm::vec4(0.0f,0.9f,0.0f,1.0f), glm::vec3(1.0f,1.0f,1.0f), glm::vec3(0,0,0));
     bunny.type=MATERIAL;
+
+    GameObject egg("egg0", eggmodel, glm::vec4(-3.0f,0.30f,0.0f,1.0f), glm::vec3(0.15f,0.15f,0.15f), glm::vec3(0,0,0));
+    egg.type=MATERIAL;
 
     GameObject floor("floor", planemodel, glm::vec4(0,-0.1,0,0), glm::vec3(10,1,10), glm::vec3(0,0,0));
     floor.type=GRASS;
 
+    GameObject wallFront("wallFront", planemodel, glm::vec4(10,1.8f,0,0), glm::vec3(1,2,10), glm::vec3(1.5708f,0,1.5708f));
+    wallFront.type=WALL;
+
+    GameObject wallBack("wallBack", planemodel, glm::vec4(-10,1.8f,0,0), glm::vec3(1,2,10), glm::vec3(1.5708f,0,-1.5708f));
+    wallBack.type=WALL;
+
+    GameObject wallRight("wallRight", planemodel, glm::vec4(0,1.8f,-10,0), glm::vec3(10,2,1), glm::vec3(1.5708f,0,0));
+    wallRight.type=WALL;
+
+    GameObject wallLeft("wallLeft", planemodel, glm::vec4(0,1.8f,10,0), glm::vec3(10,2,1), glm::vec3(-1.5708f,0,0));
+    wallLeft.type=WALL;
+
     objects.push_back(&player);
     objects.push_back(&bunny);
+    objects.push_back(&egg);
     objects.push_back(&floor);
+    objects.push_back(&wallFront);
+    objects.push_back(&wallBack);
+    objects.push_back(&wallRight);
+    objects.push_back(&wallLeft);
 
     std::map<POSSIBLE_MOV, bool*> player_keys;
     player_keys.emplace(FRONT, &g_w_down);
@@ -268,8 +294,12 @@ int main(int argc, char* argv[])
         float delta_t = current_time - prev_time;
         prev_time = current_time;
 
-        player.updateMovement(player_keys, delta_t);
+        player.can_move = !CollisionCubePlane(player, wallFront) 
+            && !CollisionCubePlane(player, wallBack) 
+            && !CollisionCubePlane(player, wallRight) 
+            && !CollisionCubePlane(player, wallLeft);
 
+        player.updateMovement(player_keys, delta_t);
 
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -293,7 +323,7 @@ int main(int argc, char* argv[])
 
         glm::mat4 projection;
         float nearplane = -0.1f;  // Posição do "near plane"
-        float farplane  = -20.0f; // Posição do "far plane"
+        float farplane  = -30.0f; // Posição do "far plane"
 
         if (g_UsePerspectiveProjection)
         {
@@ -351,7 +381,7 @@ int main(int argc, char* argv[])
 }
 
 // Função que carrega uma imagem para ser utilizada como textura
-void LoadTextureImage(const char* filename)
+void LoadTextureImage(const char* filename, GLint param)
 {
     printf("Carregando imagem \"%s\"... ", filename);
 
@@ -377,8 +407,9 @@ void LoadTextureImage(const char* filename)
     glGenSamplers(1, &sampler_id);
 
     // Veja slides 95-96 do documento Aula_20_Mapeamento_de_Texturas.pdf
-    glSamplerParameteri(sampler_id, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glSamplerParameteri(sampler_id, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glSamplerParameteri(sampler_id, GL_TEXTURE_WRAP_S, param);
+    glSamplerParameteri(sampler_id, GL_TEXTURE_WRAP_T, param);
+
 
     // Parâmetros de amostragem da textura.
     glSamplerParameteri(sampler_id, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
@@ -487,6 +518,7 @@ void LoadShadersFromFiles()
     // Variáveis em "shader_fragment.glsl" para acesso das imagens de textura
     glUseProgram(program_id);
     glUniform1i(glGetUniformLocation(program_id, "Grass"), 0);
+    glUniform1i(glGetUniformLocation(program_id, "GreenWall"), 1);
     glUseProgram(0);
 }
 

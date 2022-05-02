@@ -15,6 +15,7 @@
 enum {
     MATERIAL=0,
     GRASS,
+    WALL    
 };
 
 enum POSSIBLE_MOV {

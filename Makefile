@@ -5,8 +5,8 @@ AUX_HEADERS=include/matrices.h include/utils.h include/dejavufont.h include/stb_
 GAME_SOURCE_PATH=src/game/Sources
 GAME_HEADER_PATH=src/game/Headers
 
-GAME_SOURCES=$(GAME_SOURCE_PATH)/object.cpp
-GAME_HEADERS=$(GAME_HEADER_PATH)/object.h $(GAME_HEADER_PATH)/material.h
+GAME_SOURCES=$(GAME_SOURCE_PATH)/object.cpp $(GAME_SOURCE_PATH)/collisions.cpp
+GAME_HEADERS=$(GAME_HEADER_PATH)/object.h $(GAME_HEADER_PATH)/material.h $(GAME_HEADER_PATH)/collisions.h
 
 ./bin/Linux/main: src/main.cpp src/glad.c src/textrendering.cpp $(AUX_HEADERS) $(GAME_HEADERS)
 	mkdir -p bin/Linux

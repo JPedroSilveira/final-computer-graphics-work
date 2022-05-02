@@ -61,16 +61,17 @@ void Player::updateMovement(std::map<POSSIBLE_MOV, bool*> pressed_keys, const fl
         {
             this->position -= move_direction * current_speed * delta_t;
         }
-        if (*pressed_keys[RIGHT])
-        {
-            this->rotation.y -= current_speed * delta_t;
-            this->move_angle += current_speed * delta_t;
-        }
-        if (*pressed_keys[LEFT])
-        {
-            this->rotation.y += current_speed * delta_t;
-            this->move_angle -= current_speed * delta_t;
-
-        }
+    }  
+    
+    // Can change direction without moving
+    if (*pressed_keys[RIGHT])
+    {
+        this->rotation.y -= current_speed * delta_t;
+        this->move_angle += current_speed * delta_t;
+    }
+    if (*pressed_keys[LEFT])
+    {
+        this->rotation.y += current_speed * delta_t;
+        this->move_angle -= current_speed * delta_t;
     }
 }

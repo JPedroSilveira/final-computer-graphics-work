@@ -23,10 +23,12 @@ uniform vec4 bbox_max;
 // Identificador que define qual objeto está sendo desenhado no momento
 #define MATERIAL 0 // Calcula apenas o material
 #define GRASS  1  // Usa textura de grama no objeto
+#define WALL 2 // Usa a textura de parede
 
 uniform int object_id;
 
 uniform sampler2D Grass;
+uniform sampler2D GreenWall;
 
 // Caso de usar material, recebe esses valores do Modelo
 struct Material {
@@ -97,6 +99,19 @@ void main()
         // Equação de Iluminação
         float lambert = max(0,dot(n,l));
         color.rgb = Kd0 * (lambert + 0.01);
+        color.a = 1;
+    }
+    else if (object_id == WALL)
+    {
+        // Coordenadas de textura do plano, obtidas do arquivo OBJ.
+        float U = texcoords.x;
+        float V = texcoords.y;
+
+        vec3 Kd0 = texture(GreenWall, vec2(U,V)).rgb;
+
+        // Equação de Iluminação
+        float lambert = max(0,dot(n,l));
+        color.rgb = Kd0 * (lambert + 0.5);
         color.a = 1;
     }
     
