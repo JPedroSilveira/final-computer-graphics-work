@@ -242,7 +242,7 @@ int main(int argc, char* argv[])
     };
 
     // Game object chicken criado para facilitar a criação do player
-    GameObject* chicken = new GameObject("player", chickenmodel, glm::vec4(-8.0f,0.0f,0.0f,1.0f), glm::vec3(1.0f,1.0f,1.0f), glm::vec3(0,0,0));
+    GameObject* chicken = new GameObject("player", eggmodel, glm::vec4(-8.0f,0.9f,0.0f,1.0f), glm::vec3(0.15f,0.15f,0.15f), glm::vec3(0,0,0));
     chicken->type=MATERIAL;
     Player player(*chicken, true, 1.2f);
     player.setMaterial(chicken_mat);
@@ -294,7 +294,7 @@ int main(int argc, char* argv[])
         float delta_t = current_time - prev_time;
         prev_time = current_time;
 
-        player.can_move = !CollisionCubeCube(player, bunny);
+        player.can_move = !CollisionCubeCube(player, bunny) && !CollisionCubeCube(bunny, player);
 
         player.updateMovement(player_keys, delta_t);
 
