@@ -1,7 +1,8 @@
-#ifndef COLLISIONS_H
-#define COLLISIONS_H
+#ifndef _COLLISIONS_H
+#define _COLLISIONS_H
 
 #include "object.h"
+#include "matrices.h"
 
 bool CollisionCubePlane(GameObject cubeObject, GameObject planObject);
 bool CollisionCubeCube(GameObject cubeObjectOne, GameObject cubeObjectTwo);

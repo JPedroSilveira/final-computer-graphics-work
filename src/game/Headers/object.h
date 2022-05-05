@@ -36,6 +36,8 @@ struct GameModel
     tinyobj::attrib_t                 attrib;
     std::vector<tinyobj::shape_t>     shapes;
     std::vector<tinyobj::material_t>  materials;
+    glm::vec3 bbox_min;
+    glm::vec3 bbox_max;
     std::string go_name;
 };
 

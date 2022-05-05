@@ -294,10 +294,7 @@ int main(int argc, char* argv[])
         float delta_t = current_time - prev_time;
         prev_time = current_time;
 
-        player.can_move = !CollisionCubePlane(player, wallFront) 
-            && !CollisionCubePlane(player, wallBack) 
-            && !CollisionCubePlane(player, wallRight) 
-            && !CollisionCubePlane(player, wallLeft);
+        player.can_move = !CollisionCubeCube(player, bunny);
 
         player.updateMovement(player_keys, delta_t);
 
@@ -691,6 +688,9 @@ void BuildTrianglesAndAddToVirtualScene(GameModel* model)
 
         theobject.bbox_min = bbox_min;
         theobject.bbox_max = bbox_max;
+
+        model->bbox_min = bbox_min;
+        model->bbox_max = bbox_max;
 
         g_VirtualScene[model->shapes[shape].name] = theobject;
     }
