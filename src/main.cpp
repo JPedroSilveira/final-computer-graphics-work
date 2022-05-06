@@ -104,6 +104,7 @@ float g_CameraDistance = 5.0f; // Distância da câmera para a origem
 
 // Variável que controla o tipo de projeção utilizada: perspectiva ou ortográfica.
 bool g_UsePerspectiveProjection = true;
+bool g_UseLookAt = true;
 
 // Variáveis que definem um programa de GPU (shaders). Veja função LoadShadersFromFiles().
 GLuint vertex_shader_id;
@@ -302,19 +303,27 @@ int main(int argc, char* argv[])
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glUseProgram(program_id);
 
-        // Valores de câmera (TODO: copiar para player)
-        g_CameraTheta = - M_PI_2 - player.move_angle;
         glm::vec4 p = player.position;
-        float r = g_CameraDistance;
-        float y = r*sin(g_CameraPhi) + p.y;
-        float z = r*cos(g_CameraPhi)*cos(g_CameraTheta) + p.z;
-        float x = r*cos(g_CameraPhi)*sin(g_CameraTheta) + p.x;
-
-        glm::vec4 lookat_offset      = glm::vec4(0.0f, 2.0f, 0.0f, 0.0f);
-        glm::vec4 camera_position_c  = glm::vec4(x,y,z,1.0f); // Ponto "c", centro da câmera
-        glm::vec4 camera_lookat_l    = p + lookat_offset; // Ponto "l", para onde a câmera (look-at) estará sempre olhando
-        glm::vec4 camera_view_vector = camera_lookat_l - camera_position_c; // Vetor "view", sentido para onde a câmera está virada
+        glm::vec4 camera_position_c; // Ponto "c", centro da câmera
+        glm::vec4 camera_view_vector; // Vetor "view", sentido para onde a câmera está virada
         glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eito Y global)
+
+        if (g_UseLookAt) {
+            // Valores de câmera
+            g_CameraTheta = - M_PI_2 - player.move_angle;
+            float r = g_CameraDistance;
+            float y = r*sin(g_CameraPhi) + p.y;
+            float z = r*cos(g_CameraPhi)*cos(g_CameraTheta) + p.z;
+            float x = r*cos(g_CameraPhi)*sin(g_CameraTheta) + p.x;
+            
+            glm::vec4 lookat_offset      = glm::vec4(0.0f, 2.0f, 0.0f, 0.0f);
+            glm::vec4 camera_lookat_l    = p + lookat_offset; // Ponto "l", para onde a câmera (look-at) estará sempre olhando
+            camera_position_c            = glm::vec4(x,y,z,1.0f); // Ponto "c", centro da câmera
+            camera_view_vector           = camera_lookat_l - camera_position_c; // Vetor "view", sentido para onde a câmera está virada
+        } else {
+            camera_position_c  = glm::vec4(p.x,p.y,p.z,1.0f); // Ponto "c", centro da câmera
+            camera_view_vector = player.move_direction;
+        }
 
         glm::mat4 view = Matrix_Camera_View(camera_position_c, camera_view_vector, camera_up_vector);
 
@@ -1073,7 +1082,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
     }
 
     // Se o usuário apertar a tecla O, utilizamos projeção ortográfica.
-    if (key == GLFW_KEY_O && action == GLFW_PRESS)
+    if (key == GLFW_KEY_O && action == GLFW_PRESS && g_UseLookAt)
     {
         g_UsePerspectiveProjection = false;
     }
@@ -1121,6 +1130,14 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
     if (key == GLFW_KEY_D && action == GLFW_RELEASE)
     {
         g_d_down = false;
+    }
+
+    if (key == GLFW_KEY_C && action == GLFW_PRESS)
+    {
+        g_UseLookAt = !g_UseLookAt;
+        if (!g_UseLookAt) {
+            g_UsePerspectiveProjection  = true;
+        }
     }
 }
 
