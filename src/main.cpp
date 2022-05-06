@@ -253,9 +253,9 @@ int main(int argc, char* argv[])
     GameObject* bunnyGO = new GameObject("enemy0", bunnymodel, glm::vec4(0.0f,0.0f,0.0f,1.0f), glm::vec3(1.0f,1.0f,1.0f), glm::vec3(0,0,0));
     bunnyGO->type=MATERIAL;
     glm::vec4 p0(-8,1,-8,1);
-    glm::vec4 p1(0,1,3,1);
-    glm::vec4 p2(7,1,0,1);
-    glm::vec4 p3(8,1,8,1);
+    glm::vec4 p1(-5,1,8,1);
+    glm::vec4 p2(5,1,8,1);
+    glm::vec4 p3(8,1,-8,1);
     NPC bunny(*bunnyGO,0,0.1,p0,p1,p2,p3);
     delete bunnyGO;
     npcs.push_back(&bunny);
