@@ -260,6 +260,17 @@ int main(int argc, char* argv[])
     delete bunnyGO;
     npcs.push_back(&bunny);
 
+    bunnyGO = new GameObject("enemy1", bunnymodel, glm::vec4(0.0f,0.0f,0.0f,1.0f), glm::vec3(1.0f,1.0f,1.0f), glm::vec3(0,0,0));
+    bunnyGO->type=MATERIAL;
+    p0 = glm::vec4(9,1,9,1);
+    p1 = glm::vec4(-9,1,4.5,1);
+    p2 = glm::vec4(9,1,-4.5,1);
+    p3 = glm::vec4(-9,1,-9,1);
+    NPC bunny2(*bunnyGO,0,0.1,p0,p1,p2,p3);
+    delete bunnyGO;
+    npcs.push_back(&bunny2);
+
+
     GameObject egg("egg0", eggmodel, glm::vec4(-3.0f,0.30f,0.0f,1.0f), glm::vec3(0.15f,0.15f,0.15f), glm::vec3(0,0,0));
     egg.type=MATERIAL;
 
@@ -280,6 +291,7 @@ int main(int argc, char* argv[])
 
     objects.push_back(&player);
     objects.push_back(&bunny);
+    objects.push_back(&bunny2);
     objects.push_back(&egg);
     objects.push_back(&floor);
     objects.push_back(&wallFront);

@@ -87,7 +87,15 @@ GameObject(object), t_position(t_position), t_speed(t_speed), p0(p0), p1(p1), p2
 void NPC::updateMovement(const float delta_t)
 {
     t_position += t_speed * delta_t;
-    if (t_position > 1) t_position--;
+
+    if (t_position > 1) {
+        t_position = 1;
+        t_speed *= -1; 
+    }
+    if (t_position < 0) {
+        t_position = 0;
+        t_speed *= -1; 
+    }
 
     glm::vec4 c01  = p0 + t_position * (p1 - p0);
     glm::vec4 c12  = p1 + t_position * (p2 - p1);
