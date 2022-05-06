@@ -234,6 +234,7 @@ int main(int argc, char* argv[])
 
     // Criando as instâncias do jogo (sem repetir o modelo)
     std::vector<GameObject*> objects = {};
+    std::vector<NPC*> npcs = {};
 
     Material chicken_mat {
         glm::vec3(0.8,0.0,0.0), // Kd - termo difuso (lambert)
@@ -249,8 +250,15 @@ int main(int argc, char* argv[])
     player.setMaterial(chicken_mat);
     delete chicken; // GameObject chicken deixa de existir aqui
     
-    GameObject bunny("enemy0", bunnymodel, glm::vec4(0.0f,0.9f,0.0f,1.0f), glm::vec3(1.0f,1.0f,1.0f), glm::vec3(0,0,0));
-    bunny.type=MATERIAL;
+    GameObject* bunnyGO = new GameObject("enemy0", bunnymodel, glm::vec4(0.0f,0.0f,0.0f,1.0f), glm::vec3(1.0f,1.0f,1.0f), glm::vec3(0,0,0));
+    bunnyGO->type=MATERIAL;
+    glm::vec4 p0(-8,1,-8,1);
+    glm::vec4 p1(0,1,3,1);
+    glm::vec4 p2(7,1,0,1);
+    glm::vec4 p3(8,1,8,1);
+    NPC bunny(*bunnyGO,0,0.1,p0,p1,p2,p3);
+    delete bunnyGO;
+    npcs.push_back(&bunny);
 
     GameObject egg("egg0", eggmodel, glm::vec4(-3.0f,0.30f,0.0f,1.0f), glm::vec3(0.15f,0.15f,0.15f), glm::vec3(0,0,0));
     egg.type=MATERIAL;
@@ -298,6 +306,12 @@ int main(int argc, char* argv[])
         player.can_move = !CollisionCubeCube(player, bunny) && !CollisionCubeCube(bunny, player);
 
         player.updateMovement(player_keys, delta_t);
+
+        // Aqui, atualizamos as posições dos npcs
+        for (auto npc : npcs)
+        {
+            npc->updateMovement(delta_t);
+        }
 
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

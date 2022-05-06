@@ -67,4 +67,16 @@ struct Player : public GameObject {
     void updateMovement(std::map<POSSIBLE_MOV, bool*> pressed_keys, const float delta_t);
 };
 
+struct NPC : public GameObject {
+    NPC(GameObject& object, float t_position, float t_speed, glm::vec4 p0, glm::vec4 p1, glm::vec4 p2, glm::vec4 p3);
+    float t_position;
+    float t_speed; // ciclos por segundo (volta completa)
+    glm::vec4 p0;
+    glm::vec4 p1;
+    glm::vec4 p2;
+    glm::vec4 p3;
+
+    void updateMovement(const float delta_t);
+};
+
 #endif // OBJECT_H

@@ -80,3 +80,19 @@ void Player::updateMovement(std::map<POSSIBLE_MOV, bool*> pressed_keys, const fl
         this->move_angle -= current_speed * delta_t;
     }
 }
+
+NPC::NPC(GameObject& object, float t_position, float t_speed, glm::vec4 p0, glm::vec4 p1, glm::vec4 p2, glm::vec4 p3):
+GameObject(object), t_position(t_position), t_speed(t_speed), p0(p0), p1(p1), p2(p2), p3(p3) {}
+
+void NPC::updateMovement(const float delta_t)
+{
+    t_position += t_speed * delta_t;
+    if (t_position > 1) t_position--;
+
+    glm::vec4 c01  = p0 + t_position * (p1 - p0);
+    glm::vec4 c12  = p1 + t_position * (p2 - p1);
+    glm::vec4 c23  = p2 + t_position * (p3 - p2);
+    glm::vec4 c012 = c01 + t_position * (c12 - c01);
+    glm::vec4 c123 = c12 + t_position * (c23 - c12);
+    this->position = c012 + t_position * (c123 - c012); // Nova posição
+}
