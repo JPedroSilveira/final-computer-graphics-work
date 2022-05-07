@@ -17,6 +17,7 @@ enum {
     MATERIAL_GOURAUD,
     GRASS,
     WALL,
+    CHICKEN,
 };
 
 enum OBJ_TYPE {

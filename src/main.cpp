@@ -200,6 +200,7 @@ int main(int argc, char* argv[])
     // Carregamos duas imagens para serem utilizadas como textura
     LoadTextureImage("../../data/grass.jpg", GL_REPEAT);      // TextureImage0
     LoadTextureImage("../../data/green_wall.jpg", GL_REPEAT);  // TextureImage1
+    LoadTextureImage("../../data/chicken.jpeg", GL_CLAMP_TO_BORDER);  // TextureImage2
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
     GameModel chickenmodel("../../data/chicken.obj", "chicken");
@@ -250,7 +251,7 @@ int main(int argc, char* argv[])
 
     // Game object chicken criado para facilitar a criação do player
     GameObject* chicken = new GameObject("player", chickenmodel, glm::vec4(-7.0f,1.0f,0.0f,1.0f), glm::vec3(0.4f,0.4f,0.4f), glm::vec3(0,0,0));
-    chicken->type=MATERIAL;
+    chicken->type=CHICKEN;
     chicken->object_type=OBJ_TYPE::PLAYER;
     Player player(*chicken, true, 1.2f);
     player.setMaterial(chicken_mat);
@@ -406,7 +407,6 @@ int main(int argc, char* argv[])
             // Valores de câmera
             g_CameraTheta = - M_PI_2 - player.move_angle;
             float r = g_CameraDistance;
-            printf("\n %f", g_CameraPhi);
             float y = r*sin(g_CameraPhi) + p.y;
             float z = r*cos(g_CameraPhi)*cos(g_CameraTheta) + p.z;
             float x = r*cos(g_CameraPhi)*sin(g_CameraTheta) + p.x;
@@ -648,6 +648,7 @@ void LoadShadersFromFiles()
     glUseProgram(program_id);
     glUniform1i(glGetUniformLocation(program_id, "Grass"), 0);
     glUniform1i(glGetUniformLocation(program_id, "GreenWall"), 1);
+    glUniform1i(glGetUniformLocation(program_id, "Chicken"), 2);
     glUseProgram(0);
 }
 
@@ -1121,13 +1122,20 @@ void CursorPosCallback(GLFWwindow* window, double xpos, double ypos)
     if (g_LeftMouseButtonPressed)
     {
         float dy = ypos - g_LastCursorPosY;
+        float dx = xpos - g_LastCursorPosX;
     
-        g_CameraPhi   += 0.01f*dy;
+        g_CameraPhi   += 0.01f*dy;    
+        g_CameraTheta  += 0.01f*dx;
     
         // Em coordenadas esféricas, o ângulo phi deve ficar entre -pi/2 e +pi/2.
-        float phimax = M_PI_2 - 0.01;
+        float phimax = M_PI;
         float phimin = -phimax;
-    
+
+        if (g_CameraPhi == M_PI_2)
+        {
+            g_CameraPhi += 0.01f;
+        }
+
         if (g_CameraPhi > phimax)
             g_CameraPhi = phimax;
     

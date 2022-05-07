@@ -27,11 +27,13 @@ uniform vec4 bbox_max;
 #define MATERIAL_GOURAUD 1 // Calcula apenas o material
 #define GRASS 2  // Usa textura de grama no objeto
 #define WALL  3 // Usa a textura de parede
+#define CHICKEN 4 // Usa a textura de galinha
 
 uniform int object_id;
 
 uniform sampler2D Grass;
 uniform sampler2D GreenWall;
+uniform sampler2D Chicken;
 
 // Caso de usar material, recebe esses valores do Modelo
 struct Material {
@@ -92,10 +94,6 @@ void main()
         // especular, e ambiente. Veja slide 129 do documento Aula_17_e_18_Modelos_de_Iluminacao.pdf.
         color.rgb = lambert_diffuse_term + ambient_term + phong_specular_term;
     }
-    else if (object_id == MATERIAL_GOURAUD)
-    {
-        color = color_v;
-    }
     else if (object_id == GRASS)
     {
         // Coordenadas de textura do plano, obtidas do arquivo OBJ.
@@ -122,6 +120,22 @@ void main()
         color.rgb = Kd0 * (lambert + 0.5);
         color.a = 1;
     }
+    else if (object_id == CHICKEN)
+    {
+        // Coordenadas de textura do plano, obtidas do arquivo OBJ.
+        float U = texcoords.x;
+        float V = texcoords.y;
+        // Obtemos a refletância difusa a partir da leitura da imagem TextureImage0
+        vec3 Kd0 = texture(Chicken, vec2(U,V)).rgb;
+        float lambert = max(0,dot(n,l));
+        color.rgb = Kd0 * (lambert + 0.5);
+        color.a = 1;
+    }
+    else // if (object_id == MATERIAL_GOURAUD) ou sem definir
+    {
+        color = color_v;
+    }
+
     
 
     // Cor final com correção gamma, considerando monitor sRGB.
