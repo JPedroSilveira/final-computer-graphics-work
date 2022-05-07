@@ -159,7 +159,7 @@ namespace matrices
         return sqrt( vx*vx + vy*vy + vz*vz );
     }
 
-    inline glm::vec4 division(glm::vec4 v, float value)
+    inline glm::vec4 component_wise_division(glm::vec4 v, float value)
     {
         float vx = v.x / value;
         float vy = v.y / value;

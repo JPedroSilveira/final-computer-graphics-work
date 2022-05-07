@@ -15,7 +15,14 @@
 enum {
     MATERIAL=0,
     GRASS,
-    WALL    
+    WALL,
+};
+
+enum OBJ_TYPE {
+    PLAYER=0,
+    NPC_OBJ,
+    PLAYER_TARGET,
+    STATIC
 };
 
 enum POSSIBLE_MOV {
@@ -51,6 +58,7 @@ struct GameObject {
     glm::vec3 rotation;
     glm::vec4 move_direction;
     int type;
+    int object_type;
     GameObject* father;
     Material material;
 
@@ -65,6 +73,11 @@ struct Player : public GameObject {
     float move_angle;
 
     void updateMovement(std::map<POSSIBLE_MOV, bool*> pressed_keys, const float delta_t);
+};
+
+struct PlayerTarget : public GameObject {
+    PlayerTarget(GameObject& object, bool was_caught);
+    bool was_caught;
 };
 
 struct NPC : public GameObject {

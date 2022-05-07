@@ -84,6 +84,10 @@ void Player::updateMovement(std::map<POSSIBLE_MOV, bool*> pressed_keys, const fl
 NPC::NPC(GameObject& object, float t_position, float t_speed, glm::vec4 p0, glm::vec4 p1, glm::vec4 p2, glm::vec4 p3):
 GameObject(object), t_position(t_position), t_speed(t_speed), p0(p0), p1(p1), p2(p2), p3(p3) {}
 
+PlayerTarget::PlayerTarget(GameObject& object, bool was_caught):
+GameObject(object), was_caught(was_caught) {}
+
+
 void NPC::updateMovement(const float delta_t)
 {
     t_position += t_speed * delta_t;

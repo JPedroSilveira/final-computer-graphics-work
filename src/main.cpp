@@ -215,6 +215,10 @@ int main(int argc, char* argv[])
     ComputeNormals(&eggmodel);
     BuildTrianglesAndAddToVirtualScene(&eggmodel);
 
+    GameModel wallmodel("../../data/wall.obj", "wall");
+    ComputeNormals(&wallmodel);
+    BuildTrianglesAndAddToVirtualScene(&wallmodel);
+
     if ( argc > 1 )
     {
         GameModel model(argv[1]);
@@ -235,7 +239,9 @@ int main(int argc, char* argv[])
     // Criando as instâncias do jogo (sem repetir o modelo)
     std::vector<GameObject*> objects = {};
     std::vector<NPC*> npcs = {};
-
+    std::vector<PlayerTarget*> targets = {};
+    std::vector<GameObject*> walls = {};
+    
     Material chicken_mat {
         glm::vec3(0.8,0.0,0.0), // Kd - termo difuso (lambert)
         glm::vec3(0.4,0.4,0.4), // Ks
@@ -244,14 +250,16 @@ int main(int argc, char* argv[])
     };
 
     // Game object chicken criado para facilitar a criação do player
-    GameObject* chicken = new GameObject("player", eggmodel, glm::vec4(-8.0f,0.9f,0.0f,1.0f), glm::vec3(0.15f,0.15f,0.15f), glm::vec3(0,0,0));
+    GameObject* chicken = new GameObject("player", eggmodel, glm::vec4(-8.0f,0.30f,0.0f,1.0f), glm::vec3(0.15f,0.15f,0.15f), glm::vec3(0,0,0));
     chicken->type=MATERIAL;
+    chicken->object_type=OBJ_TYPE::PLAYER;
     Player player(*chicken, true, 1.2f);
     player.setMaterial(chicken_mat);
     delete chicken; // GameObject chicken deixa de existir aqui
     
     GameObject* bunnyGO = new GameObject("enemy0", bunnymodel, glm::vec4(0.0f,0.0f,0.0f,1.0f), glm::vec3(1.0f,1.0f,1.0f), glm::vec3(0,0,0));
     bunnyGO->type=MATERIAL;
+    bunnyGO->object_type=OBJ_TYPE::NPC_OBJ;
     glm::vec4 p0(-8,1,-8,1);
     glm::vec4 p1(-5,1,8,1);
     glm::vec4 p2(5,1,8,1);
@@ -262,6 +270,7 @@ int main(int argc, char* argv[])
 
     bunnyGO = new GameObject("enemy1", bunnymodel, glm::vec4(0.0f,0.0f,0.0f,1.0f), glm::vec3(1.0f,1.0f,1.0f), glm::vec3(0,0,0));
     bunnyGO->type=MATERIAL;
+    bunnyGO->object_type=OBJ_TYPE::NPC_OBJ;
     p0 = glm::vec4(9,1,9,1);
     p1 = glm::vec4(-9,1,4.5,1);
     p2 = glm::vec4(9,1,-4.5,1);
@@ -270,29 +279,78 @@ int main(int argc, char* argv[])
     delete bunnyGO;
     npcs.push_back(&bunny2);
 
+    GameObject* eggGo = new GameObject("egg1", eggmodel, glm::vec4(-3.0f,0.30f,0.0f,1.0f), glm::vec3(0.15f,0.15f,0.15f), glm::vec3(0,0,0));
+    eggGo->type=MATERIAL;
+    eggGo->object_type=OBJ_TYPE::PLAYER_TARGET;
 
-    GameObject egg("egg0", eggmodel, glm::vec4(-3.0f,0.30f,0.0f,1.0f), glm::vec3(0.15f,0.15f,0.15f), glm::vec3(0,0,0));
-    egg.type=MATERIAL;
+    PlayerTarget egg1(*eggGo,false);
+    delete eggGo;
+    targets.push_back(&egg1);
+
+    eggGo = new GameObject("egg2", eggmodel, glm::vec4(-6.0f,0.30f,2.0f,1.0f), glm::vec3(0.15f,0.15f,0.15f), glm::vec3(0,0,0));
+    eggGo->type=MATERIAL;
+    eggGo->object_type=OBJ_TYPE::PLAYER_TARGET;
+
+    PlayerTarget egg2(*eggGo,false);
+    delete eggGo;
+    targets.push_back(&egg2);
+
+    eggGo = new GameObject("egg3", eggmodel, glm::vec4(8.0f,0.30f,4.0f,1.0f), glm::vec3(0.15f,0.15f,0.15f), glm::vec3(0,0,0));
+    eggGo->type=MATERIAL;
+    eggGo->object_type=OBJ_TYPE::PLAYER_TARGET;
+
+    PlayerTarget egg3(*eggGo,false);
+    delete eggGo;
+    targets.push_back(&egg3);
+
+    eggGo = new GameObject("egg4", eggmodel, glm::vec4(5.0f,0.30f,-5.0f,1.0f), glm::vec3(0.15f,0.15f,0.15f), glm::vec3(0,0,0));
+    eggGo->type=MATERIAL;
+    eggGo->object_type=OBJ_TYPE::PLAYER_TARGET;
+
+    PlayerTarget egg4(*eggGo,false);
+    delete eggGo;
+    targets.push_back(&egg4);
+
+    eggGo = new GameObject("egg5", eggmodel, glm::vec4(0.0f,0.30f,7.0f,1.0f), glm::vec3(0.15f,0.15f,0.15f), glm::vec3(0,0,0));
+    eggGo->type=MATERIAL;
+    eggGo->object_type=OBJ_TYPE::PLAYER_TARGET;
+
+    PlayerTarget egg5(*eggGo,false);
+    delete eggGo;
+    targets.push_back(&egg5);
 
     GameObject floor("floor", planemodel, glm::vec4(0,-0.1,0,0), glm::vec3(10,1,10), glm::vec3(0,0,0));
     floor.type=GRASS;
+    floor.object_type=OBJ_TYPE::STATIC;
 
-    GameObject wallFront("wallFront", planemodel, glm::vec4(10,1.8f,0,0), glm::vec3(1,2,10), glm::vec3(1.5708f,0,1.5708f));
+    GameObject wallFront("wallFront", wallmodel, glm::vec4(10,1.8f,0,0), glm::vec3(1,2,10), glm::vec3(1.5708f,0,1.5708f));
     wallFront.type=WALL;
+    wallFront.object_type=OBJ_TYPE::STATIC;
+    walls.push_back(&wallFront);
 
     GameObject wallBack("wallBack", planemodel, glm::vec4(-10,1.8f,0,0), glm::vec3(1,2,10), glm::vec3(1.5708f,0,-1.5708f));
     wallBack.type=WALL;
+    wallBack.object_type=OBJ_TYPE::STATIC;
+    walls.push_back(&wallBack);
 
     GameObject wallRight("wallRight", planemodel, glm::vec4(0,1.8f,-10,0), glm::vec3(10,2,1), glm::vec3(1.5708f,0,0));
     wallRight.type=WALL;
+    wallRight.object_type=OBJ_TYPE::STATIC;
+    walls.push_back(&wallRight);
 
     GameObject wallLeft("wallLeft", planemodel, glm::vec4(0,1.8f,10,0), glm::vec3(10,2,1), glm::vec3(-1.5708f,0,0));
     wallLeft.type=WALL;
+    wallLeft.object_type=OBJ_TYPE::STATIC;
+    walls.push_back(&wallLeft);
 
     objects.push_back(&player);
     objects.push_back(&bunny);
     objects.push_back(&bunny2);
-    objects.push_back(&egg);
+    objects.push_back(&egg1);
+    objects.push_back(&egg2);
+    objects.push_back(&egg3);
+    objects.push_back(&egg4);
+    objects.push_back(&egg5);
     objects.push_back(&floor);
     objects.push_back(&wallFront);
     objects.push_back(&wallBack);
@@ -315,15 +373,38 @@ int main(int argc, char* argv[])
         float delta_t = current_time - prev_time;
         prev_time = current_time;
 
-        player.can_move = !CollisionCubeCube(player, bunny) && !CollisionCubeCube(bunny, player);
-
-        player.updateMovement(player_keys, delta_t);
+        player.can_move = true;
 
         // Aqui, atualizamos as posições dos npcs
+        // e verificamos colisões com o player
         for (auto npc : npcs)
         {
-            npc->updateMovement(delta_t);
+            if (CollisionCubeCube(player, *npc)) {
+                player.can_move = false;
+            } else {
+                npc->updateMovement(delta_t);
+            }
         }
+
+        // Aqui verificamos se um alvo foi capturado por teste de colisão
+        for (auto target : targets)
+        {
+            if (CollisionCubeSphere(player, *target)) {
+                target->was_caught = true;
+            }
+        }
+
+        // Aqui vertificamos se o player não está saindo do mapa
+        // por teste de colisão com as paredes
+        for (auto wall : walls)
+        {
+            if (CollisionCubePlane(player, *wall)) {
+                printf("Colisão!");
+                player.can_move = false;
+            }
+        }
+
+        player.updateMovement(player_keys, delta_t);
 
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -379,9 +460,15 @@ int main(int argc, char* argv[])
         // Aqui, desenhamos cada objeto de acordo com seu estado
         for (auto obj : objects)
         {
-            auto pos = matrices::Matrix_Translate(obj->position.x, obj->position.y, obj->position.z);
-            auto sca = matrices::Matrix_Scale(obj->scale.x, obj->scale.y, obj->scale.z);
-            auto rot = matrices::Matrix_Rotate_X(obj->rotation.x)*
+            if (obj->object_type == OBJ_TYPE::PLAYER_TARGET) {
+                PlayerTarget* target = static_cast<PlayerTarget*>(obj);
+                if (target->was_caught) {
+                    continue;
+                }
+            }
+            glm::mat4 pos = matrices::Matrix_Translate(obj->position.x, obj->position.y, obj->position.z);
+            glm::mat4 sca = matrices::Matrix_Scale(obj->scale.x, obj->scale.y, obj->scale.z);
+            glm::mat4 rot = matrices::Matrix_Rotate_X(obj->rotation.x)*
                        matrices::Matrix_Rotate_Y(obj->rotation.y)*
                        matrices::Matrix_Rotate_Z(obj->rotation.z);
             model = pos*sca*rot;
@@ -663,7 +750,7 @@ void BuildTrianglesAndAddToVirtualScene(GameModel* model)
         for (size_t triangle = 0; triangle < num_triangles; ++triangle)
         {
             assert(model->shapes[shape].mesh.num_face_vertices[triangle] == 3);
-
+            
             for (size_t vertex = 0; vertex < 3; ++vertex)
             {
                 tinyobj::index_t idx = model->shapes[shape].mesh.indices[3*triangle + vertex];

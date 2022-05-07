@@ -3,6 +3,7 @@
 
 #include "object.h"
 #include "matrices.h"
+#include <math.h> 
 
 bool CollisionCubePlane(GameObject cubeObject, GameObject planObject);
 bool CollisionCubeCube(GameObject cubeObjectOne, GameObject cubeObjectTwo);
