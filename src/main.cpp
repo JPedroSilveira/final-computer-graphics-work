@@ -215,10 +215,6 @@ int main(int argc, char* argv[])
     ComputeNormals(&eggmodel);
     BuildTrianglesAndAddToVirtualScene(&eggmodel);
 
-    GameModel wallmodel("../../data/wall.obj", "wall");
-    ComputeNormals(&wallmodel);
-    BuildTrianglesAndAddToVirtualScene(&wallmodel);
-
     if ( argc > 1 )
     {
         GameModel model(argv[1]);
@@ -323,7 +319,7 @@ int main(int argc, char* argv[])
     floor.type=GRASS;
     floor.object_type=OBJ_TYPE::STATIC;
 
-    GameObject wallFront("wallFront", wallmodel, glm::vec4(10,1.8f,0,0), glm::vec3(1,2,10), glm::vec3(1.5708f,0,1.5708f));
+    GameObject wallFront("wallFront", planemodel, glm::vec4(10,1.8f,0,0), glm::vec3(1,2,10), glm::vec3(1.5708f,0,1.5708f));
     wallFront.type=WALL;
     wallFront.object_type=OBJ_TYPE::STATIC;
     walls.push_back(&wallFront);
@@ -398,10 +394,10 @@ int main(int argc, char* argv[])
         // por teste de colisão com as paredes
         for (auto wall : walls)
         {
-            if (CollisionCubePlane(player, *wall)) {
-                printf("Colisão!");
-                player.can_move = false;
-            }
+            //if (CollisionCubePlane(player, *wall)) {
+            //    printf("Colisão!");
+            //    player.can_move = false;
+            // }
         }
 
         player.updateMovement(player_keys, delta_t);

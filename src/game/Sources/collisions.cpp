@@ -12,19 +12,9 @@ glm::vec4 convertPointToObjPosition(GameObject obj, glm::vec3 point) {
     return pos*sca*rot*vec4Point;
 }
 
-// Calcula se a bouding box do primeiro parâmetro tem colisão com algum 
-// ponto do segundo parâmetro
-bool CollisionCubePlane(GameObject cube, GameObject plane) {
+bool CollisionCubePoint(GameObject cube, GameObject plane) {
     glm::vec4 cubeMin = convertPointToObjPosition(cube, cube.model.bbox_min);
     glm::vec4 cubeMax = convertPointToObjPosition(cube, cube.model.bbox_max);
- 
-    // printf("\n Plane Min X: %f", planeMin.x);
-    // printf("\n Plane Min Y: %f", planeMin.y);
-    // printf("\n Plane Max X: %f", planeMax.x);
-    // printf("\n Plane Max Y: %f", planeMax.y);
-
-    // printf("\n Plane Min Z %f", planeMin.z);
-    // printf("\n Plane Max Z: %f", planeMax.z);
 
     auto model = plane.model;
     
@@ -43,11 +33,18 @@ bool CollisionCubePlane(GameObject cube, GameObject plane) {
                 const float vx = model.attrib.vertices[3*idx.vertex_index + 0];
                 const float vy = model.attrib.vertices[3*idx.vertex_index + 1];
                 const float vz = model.attrib.vertices[3*idx.vertex_index + 2];
-    
-                // TODO test
+
+                glm::vec4 point = convertPointToObjPosition(plane, glm::vec3(vx, vy, vz));
+                
+                bool xCollision = point.x >= cubeMin.x && point.x <= cubeMax.x;
+                bool yCollision = point.y >= cubeMin.y && point.y <= cubeMax.y;
+                bool zCollision = point.z >= cubeMin.z && point.z <= cubeMin.z;
+                
+                if (xCollision && yCollision && zCollision) {
+                    return true;
+                }
             }
         }
-
     }
 
     return false;
