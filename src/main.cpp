@@ -249,7 +249,7 @@ int main(int argc, char* argv[])
     };
 
     // Game object chicken criado para facilitar a criação do player
-    GameObject* chicken = new GameObject("player", chickenmodel, glm::vec4(-7.0f,0.0f,0.0f,1.0f), glm::vec3(0.4f,0.4f,0.4f), glm::vec3(0,0,0));
+    GameObject* chicken = new GameObject("player", chickenmodel, glm::vec4(-7.0f,1.0f,0.0f,1.0f), glm::vec3(0.4f,0.4f,0.4f), glm::vec3(0,0,0));
     chicken->type=MATERIAL;
     chicken->object_type=OBJ_TYPE::PLAYER;
     Player player(*chicken, true, 1.2f);

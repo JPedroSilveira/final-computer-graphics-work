@@ -68,10 +68,12 @@ void main()
     // Vetor que define o sentido da câmera em relação ao ponto atual.
     vec4 v = normalize(camera_position - p);
 
+    vec4 h = normalize(l + v);
+
     if (object_id == MATERIAL)
     {
         // Vetor que define o sentido da reflexão especular ideal.
-        vec4 r = (-l) + 2 * n * dot(n, l);
+        // vec4 r = (-l) + 2 * n * dot(n, l);
         // Espectro da fonte de iluminação
         vec3 I = vec3(1.0,1.0,1.0);
         // Espectro da luz ambiente
@@ -81,7 +83,7 @@ void main()
         // Termo ambiente
         vec3 ambient_term = material.Ka * Ia;
         // Termo especular utilizando o modelo de iluminação de Phong
-        vec3 phong_specular_term  = material.Ks * I * pow(max(0, dot(r, v)), material.q);
+        vec3 phong_specular_term  = material.Ks * I * pow(max(0, dot(h, n)), material.q);
         // Alpha
         color.a = 1;
         // Cor final do fragmento calculada com uma combinação dos termos difuso,
@@ -120,4 +122,3 @@ void main()
     // Veja https://en.wikipedia.org/w/index.php?title=Gamma_correction&oldid=751281772#Windows.2C_Mac.2C_sRGB_and_TV.2Fvideo_standard_gammas
     color.rgb = pow(color.rgb, vec3(1.0,1.0,1.0)/2.2);
 } 
-
