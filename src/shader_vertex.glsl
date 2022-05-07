@@ -19,6 +19,19 @@ out vec4 position_world;
 out vec4 position_model;
 out vec4 normal;
 out vec2 texcoords;
+out vec4 color_v;
+
+struct Material {
+    vec3 Kd;
+    vec3 Ks;
+    vec3 Ka;
+    float q;
+};
+
+uniform int object_id;
+uniform Material material;
+
+#define MATERIAL_GOURAUD 1 // Calcula apenas o material
 
 void main()
 {
@@ -36,26 +49,10 @@ void main()
 
     gl_Position = projection * view * model * model_coefficients;
 
-    // Como as variáveis acima  (tipo vec4) são vetores com 4 coeficientes,
-    // também é possível acessar e modificar cada coeficiente de maneira
-    // independente. Esses são indexados pelos nomes x, y, z, e w (nessa
-    // ordem, isto é, 'x' é o primeiro coeficiente, 'y' é o segundo, ...):
-    //
-    //     gl_Position.x = model_coefficients.x;
-    //     gl_Position.y = model_coefficients.y;
-    //     gl_Position.z = model_coefficients.z;
-    //     gl_Position.w = model_coefficients.w;
-    //
-
-    // Agora definimos outros atributos dos vértices que serão interpolados pelo
-    // rasterizador para gerar atributos únicos para cada fragmento gerado.
-
     // Posição do vértice atual no sistema de coordenadas global (World).
     position_world = model * model_coefficients;
-
     // Posição do vértice atual no sistema de coordenadas local do modelo.
     position_model = model_coefficients;
-
     // Normal do vértice atual no sistema de coordenadas global (World).
     // Veja slides 123-151 do documento Aula_07_Transformacoes_Geometricas_3D.pdf.
     normal = inverse(transpose(model)) * normal_coefficients;
@@ -63,4 +60,27 @@ void main()
 
     // Coordenadas de textura obtidas do arquivo OBJ (se existirem!)
     texcoords = texture_coefficients;
+    
+    if (object_id == MATERIAL_GOURAUD)
+    {
+        vec4 l = normalize(vec4(1.0,1.0,0.5,0.0));
+        vec4 n = normalize(normal);
+        float lambert = max(0, dot(n,l));
+        vec3 I = vec3(1.0,1.0,1.0);
+        // Espectro da luz ambiente
+        vec3 Ia = vec3(0.2, 0.2, 0.2);
+        // Termo difuso utilizando a lei dos cossenos de Lambert
+        vec3 lambert_diffuse_term = material.Kd * I * max(0, dot(n, l));
+        // Termo ambiente
+        vec3 ambient_term = material.Ka * Ia;
+        // Termo especular utilizando o modelo de iluminação de Phong
+        // vec3 phong_specular_term  = material.Ks * I * pow(max(0, dot(h, n)), material.q);
+        // Alpha
+        color_v.a = 1;
+        // Cor final do fragmento calculada com uma combinação dos termos difuso,
+        // especular, e ambiente. Veja slide 129 do documento Aula_17_e_18_Modelos_de_Iluminacao.pdf.
+        color_v.rgb = lambert_diffuse_term + ambient_term;
+    } else {
+        color_v = vec4(0,0,0,1);
+    }
 }

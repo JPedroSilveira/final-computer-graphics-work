@@ -293,7 +293,7 @@ int main(int argc, char* argv[])
     };
 
     for (auto eggGo : eggGos) {
-        eggGo->type=MATERIAL;
+        eggGo->type=MATERIAL_GOURAUD;
         eggGo->object_type=OBJ_TYPE::PLAYER_TARGET;
         PlayerTarget* egg = new PlayerTarget(*eggGo,false);
         delete eggGo;

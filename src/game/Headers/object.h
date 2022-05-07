@@ -14,6 +14,7 @@
 
 enum {
     MATERIAL=0,
+    MATERIAL_GOURAUD,
     GRASS,
     WALL,
 };

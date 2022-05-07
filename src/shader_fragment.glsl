@@ -7,6 +7,8 @@
 in vec4 position_world;
 in vec4 normal;
 
+in vec4 color_v;
+
 // Coordenadas de textura obtidas do arquivo OBJ (se existirem!)
 in vec2 texcoords;
 
@@ -22,8 +24,9 @@ uniform vec4 bbox_max;
 
 // Identificador que define qual objeto está sendo desenhado no momento
 #define MATERIAL 0 // Calcula apenas o material
-#define GRASS  1  // Usa textura de grama no objeto
-#define WALL 2 // Usa a textura de parede
+#define MATERIAL_GOURAUD 1 // Calcula apenas o material
+#define GRASS 2  // Usa textura de grama no objeto
+#define WALL  3 // Usa a textura de parede
 
 uniform int object_id;
 
@@ -73,7 +76,6 @@ void main()
     if (object_id == MATERIAL)
     {
         // Vetor que define o sentido da reflexão especular ideal.
-        // vec4 r = (-l) + 2 * n * dot(n, l);
         // Espectro da fonte de iluminação
         vec3 I = vec3(1.0,1.0,1.0);
         // Espectro da luz ambiente
@@ -89,6 +91,10 @@ void main()
         // Cor final do fragmento calculada com uma combinação dos termos difuso,
         // especular, e ambiente. Veja slide 129 do documento Aula_17_e_18_Modelos_de_Iluminacao.pdf.
         color.rgb = lambert_diffuse_term + ambient_term + phong_specular_term;
+    }
+    else if (object_id == MATERIAL_GOURAUD)
+    {
+        color = color_v;
     }
     else if (object_id == GRASS)
     {
