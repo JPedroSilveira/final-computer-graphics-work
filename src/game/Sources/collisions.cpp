@@ -12,7 +12,6 @@ glm::vec4 convertPointToObjPosition(GameObject obj, glm::vec3 point) {
 bool CollisionCubePlane(GameObject cube, GameObject plane) {
     glm::vec4 cubeMin = convertPointToObjPosition(cube, cube.model.bbox_min);
     glm::vec4 cubeMax = convertPointToObjPosition(cube, cube.model.bbox_max);
-    glm::vec4 planeMin = convertPointToObjPosition(plane, plane.model.bbox_min);
 
     glm::vec4 cubeCenter = matrices::component_wise_division((cubeMax + cubeMin), 2.0);
     glm::vec4 extents = cubeMax - cubeCenter;
@@ -36,7 +35,16 @@ bool CollisionCubePlane(GameObject cube, GameObject plane) {
     planeNormal[3] = 0.0f;
     cubeCenter[3] = 0.0f;
 
-    float s = matrices::dotproduct(planeNormal, cubeCenter) - 9.6;
+    float d = 9.8f;
+    if (planeNormal.z == 0.0f) {
+        if (planeNormal.x > 0.0f) {
+            d = 9.8f;
+        } else {
+            d = 10.8f;
+        }
+    }
+
+    float s = matrices::dotproduct(planeNormal, cubeCenter) - d;
 
     return abs(s) <= r;
 }

@@ -304,3 +304,32 @@ void TextRendering_PrintMatrixVectorProductDivW(GLFWwindow* window, glm::mat4 M,
     snprintf(buffer, 90, "[%+0.2f %+0.2f %+0.2f %+0.2f][%+0.2f]     [%+0.2f]        [%+0.2f]\n", M[0][3], M[1][3], M[2][3], M[3][3], v[3], r[3], r[3]/w);
     TextRendering_PrintString(window, buffer, x, y - 3*lineheight, scale);
 }
+
+void TextRendering_PrintScore(GLFWwindow* window, int score) {
+    static char buffer[20] = "0 pontos";
+
+    int numchars = snprintf(buffer, 20, "%d pontos", score);
+
+    float lineheight = TextRendering_LineHeight(window);
+    float charwidth = TextRendering_CharWidth(window);
+
+    TextRendering_PrintString(window, buffer, 1.0f-(numchars + 1)*charwidth, lineheight-1.0f, 5.0f);
+}
+
+void TextRendering_Gameover(GLFWwindow* window) {
+    static char buffer[10] = "GAME OVER";
+
+    float scale = 10.0f;
+    float lineheight = TextRendering_LineHeight(window);
+    
+    TextRendering_PrintString(window, buffer, -0.925f, lineheight/2, scale);
+}
+
+void TextRendering_Win(GLFWwindow* window) {
+    static char buffer[9] = "YOU WIN!";
+
+    float lineheight = TextRendering_LineHeight(window);
+    float charwidth = TextRendering_CharWidth(window);
+
+    TextRendering_PrintString(window, buffer, -0.925f, lineheight/2, 10.0f);
+}

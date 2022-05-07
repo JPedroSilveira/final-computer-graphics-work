@@ -55,6 +55,9 @@ void TextRendering_PrintVector(GLFWwindow* window, glm::vec4 v, float x, float y
 void TextRendering_PrintMatrixVectorProduct(GLFWwindow* window, glm::mat4 M, glm::vec4 v, float x, float y, float scale = 1.0f);
 void TextRendering_PrintMatrixVectorProductMoreDigits(GLFWwindow* window, glm::mat4 M, glm::vec4 v, float x, float y, float scale = 1.0f);
 void TextRendering_PrintMatrixVectorProductDivW(GLFWwindow* window, glm::mat4 M, glm::vec4 v, float x, float y, float scale = 1.0f);
+void TextRendering_PrintScore(GLFWwindow* window, int score);
+void TextRendering_Gameover(GLFWwindow* window);
+void TextRendering_Win(GLFWwindow* window);
 
 // Funções abaixo renderizam como texto na janela OpenGL algumas matrizes e
 // outras informações do programa. Definidas após main().
@@ -246,17 +249,17 @@ int main(int argc, char* argv[])
     };
 
     // Game object chicken criado para facilitar a criação do player
-    GameObject* chicken = new GameObject("player", eggmodel, glm::vec4(-8.0f,0.30f,0.0f,1.0f), glm::vec3(0.15f,0.15f,0.15f), glm::vec3(0,0,0));
+    GameObject* chicken = new GameObject("player", chickenmodel, glm::vec4(-7.0f,1.50f,0.0f,1.0f), glm::vec3(0.4f,0.4f,0.4f), glm::vec3(0,0,0));
     chicken->type=MATERIAL;
     chicken->object_type=OBJ_TYPE::PLAYER;
     Player player(*chicken, true, 1.2f);
     player.setMaterial(chicken_mat);
     delete chicken; // GameObject chicken deixa de existir aqui
     objects.push_back(&player);
-
+    
     std::vector<GameObject*> bunnyGOs = {
-        new GameObject("enemy0", bunnymodel, glm::vec4(0.0f,0.0f,0.0f,1.0f), glm::vec3(1.0f,1.0f,1.0f), glm::vec3(0,0,0)),
-        new GameObject("enemy1", bunnymodel, glm::vec4(0.0f,0.0f,0.0f,1.0f), glm::vec3(1.0f,1.0f,1.0f), glm::vec3(0,0,0))
+        new GameObject("enemy0", bunnymodel, glm::vec4(0.0f,0.0f,0.0f,1.0f), glm::vec3(0.6f,0.6f,0.6f), glm::vec3(0,0,0)),
+        new GameObject("enemy1", bunnymodel, glm::vec4(0.0f,0.0f,0.0f,1.0f), glm::vec3(0.6f,0.6f,0.6f), glm::vec3(0,0,0))
     };
 
     std::vector<std::vector<glm::vec4>> bunnyBezierPoints = {
@@ -279,12 +282,13 @@ int main(int argc, char* argv[])
         bunnyCount++;
     }
 
+    auto eggSize = glm::vec3(0.15f,0.15f,0.15f);
     std::vector<GameObject*> eggGos = {
-        new GameObject("egg1", eggmodel, glm::vec4(-3.0f,0.30f,0.0f,1.0f), glm::vec3(0.15f,0.15f,0.15f), glm::vec3(0,0,0)),
-        new GameObject("egg2", eggmodel, glm::vec4(-6.0f,0.30f,2.0f,1.0f), glm::vec3(0.15f,0.15f,0.15f), glm::vec3(0,0,0)),
-        new GameObject("egg3", eggmodel, glm::vec4(8.0f,0.30f,4.0f,1.0f), glm::vec3(0.15f,0.15f,0.15f), glm::vec3(0,0,0)),
-        new GameObject("egg4", eggmodel, glm::vec4(5.0f,0.30f,-5.0f,1.0f), glm::vec3(0.15f,0.15f,0.15f), glm::vec3(0,0,0)),
-        new GameObject("egg5", eggmodel, glm::vec4(0.0f,0.30f,7.0f,1.0f), glm::vec3(0.15f,0.15f,0.15f), glm::vec3(0,0,0))
+        new GameObject("egg1", eggmodel, glm::vec4(-3.0f,0.30f,0.0f,1.0f), eggSize, glm::vec3(0,0,0)),
+        new GameObject("egg2", eggmodel, glm::vec4(-6.0f,0.30f,2.0f,1.0f), eggSize, glm::vec3(0,0,0)),
+        new GameObject("egg3", eggmodel, glm::vec4(8.0f,0.30f,4.0f,1.0f), eggSize, glm::vec3(0,0,0)),
+        new GameObject("egg4", eggmodel, glm::vec4(5.0f,0.30f,-5.0f,1.0f), eggSize, glm::vec3(0,0,0)),
+        new GameObject("egg5", eggmodel, glm::vec4(0.0f,0.30f,7.0f,1.0f), eggSize, glm::vec3(0,0,0))
     };
 
     for (auto eggGo : eggGos) {
@@ -334,6 +338,10 @@ int main(int argc, char* argv[])
     
     float prev_time = (float)glfwGetTime();
 
+    bool gameover = false;
+    bool win = false;
+    int score = 0;
+
     while (!glfwWindowShouldClose(window))
     {
         // Aqui atualizamos os valores do que deve ser atualizado
@@ -350,6 +358,7 @@ int main(int argc, char* argv[])
         {
             if (CollisionCubeCube(player, *npc)) {
                 player.can_move = false;
+                gameover = true;
             } else {
                 npc->updateMovement(delta_t);
             }
@@ -372,7 +381,9 @@ int main(int argc, char* argv[])
             }
         }
 
-        player.updateMovement(player_keys, delta_t);
+        if (!gameover && !win) {
+            player.updateMovement(player_keys, delta_t);
+        }
 
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -454,6 +465,28 @@ int main(int argc, char* argv[])
             DrawVirtualObject(obj->model.go_name.c_str());
         }
         TextRendering_ShowFramesPerSecond(window);
+
+        score = 0;
+        for (auto target : targets)
+        {    
+            if (target->was_caught) {
+                ++score;
+            }
+        }
+
+        if (score == targets.size()) {
+            win = true;
+        }
+
+        TextRendering_PrintScore(window, score);
+
+        if (gameover) {
+            TextRendering_Gameover(window);
+        }
+
+        if (win) {
+            TextRendering_Win(window);
+        }
 
         glfwSwapBuffers(window);
 
