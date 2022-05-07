@@ -108,6 +108,7 @@ float g_CameraDistance = 5.0f; // Distância da câmera para a origem
 // Variável que controla o tipo de projeção utilizada: perspectiva ou ortográfica.
 bool g_UsePerspectiveProjection = true;
 bool g_UseLookAt = true;
+bool g_lockCamera = true;
 
 // Variáveis que definem um programa de GPU (shaders). Veja função LoadShadersFromFiles().
 GLuint vertex_shader_id;
@@ -241,20 +242,12 @@ int main(int argc, char* argv[])
     std::vector<NPC*> npcs = {};
     std::vector<PlayerTarget*> targets = {};
     std::vector<GameObject*> walls = {};
-    
-    Material chicken_mat {
-        glm::vec3(0.8,0.0,0.0), // Kd - termo difuso (lambert)
-        glm::vec3(0.4,0.4,0.4), // Ks
-        glm::vec3(0.4,0.4,0.4), // Ka - luz ambiente
-        32                      // q
-    };
 
     // Game object chicken criado para facilitar a criação do player
     GameObject* chicken = new GameObject("player", chickenmodel, glm::vec4(-7.0f,1.0f,0.0f,1.0f), glm::vec3(0.4f,0.4f,0.4f), glm::vec3(0,0,0));
     chicken->type=CHICKEN;
     chicken->object_type=OBJ_TYPE::PLAYER;
     Player player(*chicken, true, 1.2f);
-    player.setMaterial(chicken_mat);
     delete chicken; // GameObject chicken deixa de existir aqui
     objects.push_back(&player);
     
@@ -268,8 +261,16 @@ int main(int argc, char* argv[])
         {glm::vec4(9,1,9,1), glm::vec4(-9,1,4.5,1), glm::vec4(9,1,-4.5,1), glm::vec4(-9,1,-9,1)}
     };
 
+    Material bunny_mat {
+        glm::vec3(0.8,0.0,0.0), // Kd - termo difuso (lambert)
+        glm::vec3(0.4,0.4,0.4), // Ks
+        glm::vec3(0.4,0.4,0.4), // Ka - luz ambiente
+        32                      // q
+    };
+
     int bunnyCount = 0;
     for (auto bunnyGO : bunnyGOs) {
+        bunnyGO->material = bunny_mat;
         bunnyGO->type=MATERIAL;
         bunnyGO->object_type=OBJ_TYPE::NPC_OBJ;
         glm::vec4 p0 = bunnyBezierPoints[bunnyCount][0];
@@ -295,7 +296,9 @@ int main(int argc, char* argv[])
     };
 
     std::vector<int> eggMaterial = {
-        MATERIAL, MATERIAL, MATERIAL, MATERIAL, MATERIAL, MATERIAL_GOURAUD
+        MATERIAL_GOURAUD, MATERIAL_GOURAUD, 
+        MATERIAL_GOURAUD, MATERIAL_GOURAUD, 
+        MATERIAL_GOURAUD, MATERIAL_GOURAUD
     };
 
     int eggCount = 0;
@@ -405,7 +408,8 @@ int main(int argc, char* argv[])
 
         if (g_UseLookAt) {
             // Valores de câmera
-            g_CameraTheta = - M_PI_2 - player.move_angle;
+            if (g_lockCamera)
+                g_CameraTheta = - M_PI_2 - player.move_angle;
             float r = g_CameraDistance;
             float y = r*sin(g_CameraPhi) + p.y;
             float z = r*cos(g_CameraPhi)*cos(g_CameraTheta) + p.z;
@@ -1274,6 +1278,11 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
         if (!g_UseLookAt) {
             g_UsePerspectiveProjection  = true;
         }
+    }
+
+    if (key == GLFW_KEY_L && action == GLFW_PRESS)
+    {
+        g_lockCamera = !g_lockCamera;
     }
 }
 

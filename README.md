@@ -13,5 +13,5 @@ o -> Visão ortografica (apenas 3ª pessoa)
 p -> Visão perspectiva
 c -> alterar entre 1ª e 3ª pessoa
 
-l -> travar câmera
+l -> travar câmera atrás do jogador (apenas 3ª pessoa)
 ```

@@ -3,10 +3,13 @@
 glm::vec4 convertPointToObjPosition(GameObject obj, glm::vec3 point) {
     glm::mat4 pos = matrices::Matrix_Translate(obj.position.x, obj.position.y, obj.position.z);
     glm::mat4 sca = matrices::Matrix_Scale(obj.scale.x, obj.scale.y, obj.scale.z);
+    glm::mat4 rot = matrices::Matrix_Rotate_X(obj.rotation.x)*
+                       matrices::Matrix_Rotate_Y(obj.rotation.y)*
+                       matrices::Matrix_Rotate_Z(obj.rotation.z);
 
     glm::vec4 vec4Point(point.x, point.y, point.z, 1.0);
 
-    return pos*sca*vec4Point;
+    return pos*sca*rot*vec4Point;
 }
 
 bool CollisionCubePlane(GameObject cube, GameObject plane) {
