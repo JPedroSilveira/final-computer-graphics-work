@@ -420,7 +420,6 @@ int main(int argc, char* argv[])
             camera_position_c            = glm::vec4(x,y,z,1.0f); // Ponto "c", centro da câmera
             camera_view_vector           = camera_lookat_l - camera_position_c; // Vetor "view", sentido para onde a câmera está virada
         } else {
-            camera_position_c  = glm::vec4(p.x,p.y,p.z,1.0f); // Ponto "c", centro da câmera
             camera_view_vector = player.move_direction;
         }
 
