@@ -289,17 +289,24 @@ int main(int argc, char* argv[])
         new GameObject("egg2", eggmodel, glm::vec4(-6.0f,0.30f,2.0f,1.0f), eggSize, glm::vec3(0,0,0)),
         new GameObject("egg3", eggmodel, glm::vec4(8.0f,0.30f,4.0f,1.0f), eggSize, glm::vec3(0,0,0)),
         new GameObject("egg4", eggmodel, glm::vec4(5.0f,0.30f,-5.0f,1.0f), eggSize, glm::vec3(0,0,0)),
-        new GameObject("egg5", eggmodel, glm::vec4(0.0f,0.30f,7.0f,1.0f), eggSize, glm::vec3(0,0,0))
+        new GameObject("egg5", eggmodel, glm::vec4(0.0f,0.30f,7.0f,1.0f), eggSize, glm::vec3(0,0,0)),
+        new GameObject("egg6", eggmodel, glm::vec4(0.0f,0.30f,8.0f,1.0f), eggSize, glm::vec3(0,0,0))
     };
 
+    std::vector<int> eggMaterial = {
+        MATERIAL, MATERIAL, MATERIAL, MATERIAL, MATERIAL, MATERIAL_GOURAUD
+    };
+
+    int eggCount = 0;
     for (auto eggGo : eggGos) {
-        eggGo->type=MATERIAL_GOURAUD;
+        eggGo->type=eggMaterial[eggCount];
         eggGo->object_type=OBJ_TYPE::PLAYER_TARGET;
         PlayerTarget* egg = new PlayerTarget(*eggGo,false);
         delete eggGo;
 
         objects.push_back(egg);
         targets.push_back(egg);
+        ++eggCount;
     }
 
     GameObject floor("floor", planemodel, glm::vec4(0,-0.1,0,0), glm::vec3(10,1,10), glm::vec3(0,0,0));
@@ -399,6 +406,7 @@ int main(int argc, char* argv[])
             // Valores de câmera
             g_CameraTheta = - M_PI_2 - player.move_angle;
             float r = g_CameraDistance;
+            printf("\n %f", g_CameraPhi);
             float y = r*sin(g_CameraPhi) + p.y;
             float z = r*cos(g_CameraPhi)*cos(g_CameraTheta) + p.z;
             float x = r*cos(g_CameraPhi)*sin(g_CameraTheta) + p.x;
@@ -1117,7 +1125,7 @@ void CursorPosCallback(GLFWwindow* window, double xpos, double ypos)
         g_CameraPhi   += 0.01f*dy;
     
         // Em coordenadas esféricas, o ângulo phi deve ficar entre -pi/2 e +pi/2.
-        float phimax = M_PI_2;
+        float phimax = M_PI_2 - 0.01;
         float phimin = -phimax;
     
         if (g_CameraPhi > phimax)
@@ -1169,9 +1177,14 @@ void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
     // definição do sistema de coordenadas da câmera. Isto é, a variável abaixo
     // nunca pode ser zero. Versões anteriores deste código possuíam este bug,
     // o qual foi detectado pelo aluno Vinicius Fraga (2017/2).
-    const float verysmallnumber = std::numeric_limits<float>::epsilon();
-    if (g_CameraDistance < verysmallnumber)
-        g_CameraDistance = verysmallnumber;
+    const float minDistance = 2.0f;
+    const float maxDistance = 12.0f;
+    if (g_CameraDistance < minDistance) {
+        g_CameraDistance = minDistance; 
+    }
+    if (g_CameraDistance > maxDistance) {
+        g_CameraDistance = maxDistance;
+    }
 }
 
 // Definição da função que será chamada sempre que o usuário pressionar alguma
