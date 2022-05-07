@@ -49,24 +49,25 @@ void Player::updateMovement(std::map<POSSIBLE_MOV, bool*> pressed_keys, const fl
     float r = current_speed;
     float x = r*cos(this->move_angle);
     float z = r*sin(this->move_angle);
+    float jump_back = 0.05f;
     move_direction = glm::vec4(x,0,z,0);
 
-        if (*pressed_keys[FRONT])
-        {
-            if (can_move){
-                this->position += move_direction * current_speed * delta_t;
-            } else {
-                this->position -= move_direction * 0.025f;
-            }
+    if (*pressed_keys[FRONT])
+    {
+        if (can_move){
+            this->position += move_direction * current_speed * delta_t;
+        } else {
+            this->position -= move_direction * jump_back;
         }
-        if (*pressed_keys[BACK])
-        {
-            if (can_move){
-                this->position -= move_direction * current_speed * delta_t;
-            } else {
-                this->position += move_direction * 0.025f;
-            }
+    }
+    if (*pressed_keys[BACK])
+    {
+        if (can_move){
+            this->position -= move_direction * current_speed * delta_t;
+        } else {
+            this->position += move_direction * jump_back;
         }
+    }
     
     // Can change direction without moving
     if (*pressed_keys[RIGHT])

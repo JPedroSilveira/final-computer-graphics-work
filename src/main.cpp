@@ -252,105 +252,78 @@ int main(int argc, char* argv[])
     Player player(*chicken, true, 1.2f);
     player.setMaterial(chicken_mat);
     delete chicken; // GameObject chicken deixa de existir aqui
-    
-    GameObject* bunnyGO = new GameObject("enemy0", bunnymodel, glm::vec4(0.0f,0.0f,0.0f,1.0f), glm::vec3(1.0f,1.0f,1.0f), glm::vec3(0,0,0));
-    bunnyGO->type=MATERIAL;
-    bunnyGO->object_type=OBJ_TYPE::NPC_OBJ;
-    glm::vec4 p0(-8,1,-8,1);
-    glm::vec4 p1(-5,1,8,1);
-    glm::vec4 p2(5,1,8,1);
-    glm::vec4 p3(8,1,-8,1);
-    NPC bunny(*bunnyGO,0,0.1,p0,p1,p2,p3);
-    delete bunnyGO;
-    npcs.push_back(&bunny);
+    objects.push_back(&player);
 
-    bunnyGO = new GameObject("enemy1", bunnymodel, glm::vec4(0.0f,0.0f,0.0f,1.0f), glm::vec3(1.0f,1.0f,1.0f), glm::vec3(0,0,0));
-    bunnyGO->type=MATERIAL;
-    bunnyGO->object_type=OBJ_TYPE::NPC_OBJ;
-    p0 = glm::vec4(9,1,9,1);
-    p1 = glm::vec4(-9,1,4.5,1);
-    p2 = glm::vec4(9,1,-4.5,1);
-    p3 = glm::vec4(-9,1,-9,1);
-    NPC bunny2(*bunnyGO,0,0.1,p0,p1,p2,p3);
-    delete bunnyGO;
-    npcs.push_back(&bunny2);
+    std::vector<GameObject*> bunnyGOs = {
+        new GameObject("enemy0", bunnymodel, glm::vec4(0.0f,0.0f,0.0f,1.0f), glm::vec3(1.0f,1.0f,1.0f), glm::vec3(0,0,0)),
+        new GameObject("enemy1", bunnymodel, glm::vec4(0.0f,0.0f,0.0f,1.0f), glm::vec3(1.0f,1.0f,1.0f), glm::vec3(0,0,0))
+    };
 
-    GameObject* eggGo = new GameObject("egg1", eggmodel, glm::vec4(-3.0f,0.30f,0.0f,1.0f), glm::vec3(0.15f,0.15f,0.15f), glm::vec3(0,0,0));
-    eggGo->type=MATERIAL;
-    eggGo->object_type=OBJ_TYPE::PLAYER_TARGET;
+    std::vector<std::vector<glm::vec4>> bunnyBezierPoints = {
+        {glm::vec4(-8,1,-8,1), glm::vec4(-5,1,8,1),  glm::vec4(5,1,8,1), glm::vec4(8,1,-8,1)},
+        {glm::vec4(9,1,9,1), glm::vec4(-9,1,4.5,1), glm::vec4(9,1,-4.5,1), glm::vec4(-9,1,-9,1)}
+    };
 
-    PlayerTarget egg1(*eggGo,false);
-    delete eggGo;
-    targets.push_back(&egg1);
+    int bunnyCount = 0;
+    for (auto bunnyGO : bunnyGOs) {
+        bunnyGO->type=MATERIAL;
+        bunnyGO->object_type=OBJ_TYPE::NPC_OBJ;
+        glm::vec4 p0 = bunnyBezierPoints[bunnyCount][0];
+        glm::vec4 p1 = bunnyBezierPoints[bunnyCount][1];
+        glm::vec4 p2 = bunnyBezierPoints[bunnyCount][2];
+        glm::vec4 p3 = bunnyBezierPoints[bunnyCount][3];
+        NPC* bunny = new NPC(*bunnyGO,0,0.1,p0,p1,p2,p3);
+        delete bunnyGO;
+        objects.push_back(bunny);
+        npcs.push_back(bunny);
+        bunnyCount++;
+    }
 
-    eggGo = new GameObject("egg2", eggmodel, glm::vec4(-6.0f,0.30f,2.0f,1.0f), glm::vec3(0.15f,0.15f,0.15f), glm::vec3(0,0,0));
-    eggGo->type=MATERIAL;
-    eggGo->object_type=OBJ_TYPE::PLAYER_TARGET;
+    std::vector<GameObject*> eggGos = {
+        new GameObject("egg1", eggmodel, glm::vec4(-3.0f,0.30f,0.0f,1.0f), glm::vec3(0.15f,0.15f,0.15f), glm::vec3(0,0,0)),
+        new GameObject("egg2", eggmodel, glm::vec4(-6.0f,0.30f,2.0f,1.0f), glm::vec3(0.15f,0.15f,0.15f), glm::vec3(0,0,0)),
+        new GameObject("egg3", eggmodel, glm::vec4(8.0f,0.30f,4.0f,1.0f), glm::vec3(0.15f,0.15f,0.15f), glm::vec3(0,0,0)),
+        new GameObject("egg4", eggmodel, glm::vec4(5.0f,0.30f,-5.0f,1.0f), glm::vec3(0.15f,0.15f,0.15f), glm::vec3(0,0,0)),
+        new GameObject("egg5", eggmodel, glm::vec4(0.0f,0.30f,7.0f,1.0f), glm::vec3(0.15f,0.15f,0.15f), glm::vec3(0,0,0))
+    };
 
-    PlayerTarget egg2(*eggGo,false);
-    delete eggGo;
-    targets.push_back(&egg2);
+    for (auto eggGo : eggGos) {
+        eggGo->type=MATERIAL;
+        eggGo->object_type=OBJ_TYPE::PLAYER_TARGET;
+        delete eggGo;
 
-    eggGo = new GameObject("egg3", eggmodel, glm::vec4(8.0f,0.30f,4.0f,1.0f), glm::vec3(0.15f,0.15f,0.15f), glm::vec3(0,0,0));
-    eggGo->type=MATERIAL;
-    eggGo->object_type=OBJ_TYPE::PLAYER_TARGET;
-
-    PlayerTarget egg3(*eggGo,false);
-    delete eggGo;
-    targets.push_back(&egg3);
-
-    eggGo = new GameObject("egg4", eggmodel, glm::vec4(5.0f,0.30f,-5.0f,1.0f), glm::vec3(0.15f,0.15f,0.15f), glm::vec3(0,0,0));
-    eggGo->type=MATERIAL;
-    eggGo->object_type=OBJ_TYPE::PLAYER_TARGET;
-
-    PlayerTarget egg4(*eggGo,false);
-    delete eggGo;
-    targets.push_back(&egg4);
-
-    eggGo = new GameObject("egg5", eggmodel, glm::vec4(0.0f,0.30f,7.0f,1.0f), glm::vec3(0.15f,0.15f,0.15f), glm::vec3(0,0,0));
-    eggGo->type=MATERIAL;
-    eggGo->object_type=OBJ_TYPE::PLAYER_TARGET;
-
-    PlayerTarget egg5(*eggGo,false);
-    delete eggGo;
-    targets.push_back(&egg5);
+        PlayerTarget* egg = new PlayerTarget(*eggGo,false);
+        objects.push_back(egg);
+        targets.push_back(egg);
+    }
 
     GameObject floor("floor", planemodel, glm::vec4(0,-0.1,0,0), glm::vec3(10,1,10), glm::vec3(0,0,0));
     floor.type=GRASS;
     floor.object_type=OBJ_TYPE::STATIC;
+    objects.push_back(&floor);
 
     GameObject wallFront("wallFront", planemodel, glm::vec4(10,1.8f,0,0), glm::vec3(1,2,10), glm::vec3(1.5708f,0,1.5708f));
     wallFront.type=WALL;
     wallFront.object_type=OBJ_TYPE::STATIC;
     walls.push_back(&wallFront);
+    objects.push_back(&wallFront);
 
     GameObject wallBack("wallBack", planemodel, glm::vec4(-10,1.8f,0,0), glm::vec3(1,2,10), glm::vec3(1.5708f,0,-1.5708f));
     wallBack.type=WALL;
     wallBack.object_type=OBJ_TYPE::STATIC;
     walls.push_back(&wallBack);
+    objects.push_back(&wallBack);
 
     GameObject wallRight("wallRight", planemodel, glm::vec4(0,1.8f,-10,0), glm::vec3(10,2,1), glm::vec3(1.5708f,0,0));
     wallRight.type=WALL;
     wallRight.object_type=OBJ_TYPE::STATIC;
     walls.push_back(&wallRight);
+    objects.push_back(&wallRight);
 
     GameObject wallLeft("wallLeft", planemodel, glm::vec4(0,1.8f,10,0), glm::vec3(10,2,1), glm::vec3(-1.5708f,0,0));
     wallLeft.type=WALL;
     wallLeft.object_type=OBJ_TYPE::STATIC;
     walls.push_back(&wallLeft);
-
-    objects.push_back(&player);
-    objects.push_back(&bunny);
-    objects.push_back(&bunny2);
-    objects.push_back(&egg1);
-    objects.push_back(&egg2);
-    objects.push_back(&egg3);
-    objects.push_back(&egg4);
-    objects.push_back(&egg5);
-    objects.push_back(&floor);
-    objects.push_back(&wallFront);
-    objects.push_back(&wallBack);
-    objects.push_back(&wallRight);
     objects.push_back(&wallLeft);
 
     std::map<POSSIBLE_MOV, bool*> player_keys;
@@ -394,10 +367,9 @@ int main(int argc, char* argv[])
         // por teste de colisão com as paredes
         for (auto wall : walls)
         {
-            //if (CollisionCubePlane(player, *wall)) {
-            //    printf("Colisão!");
-            //    player.can_move = false;
-            // }
+            if (CollisionCubePlane(player, *wall)) {
+                player.can_move = false;
+            }
         }
 
         player.updateMovement(player_keys, delta_t);
@@ -409,7 +381,7 @@ int main(int argc, char* argv[])
         glm::vec4 p = player.position;
         glm::vec4 camera_position_c; // Ponto "c", centro da câmera
         glm::vec4 camera_view_vector; // Vetor "view", sentido para onde a câmera está virada
-        glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eito Y global)
+        glm::vec4 camera_up_vector = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eito Y global)
 
         if (g_UseLookAt) {
             // Valores de câmera

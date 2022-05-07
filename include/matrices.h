@@ -232,6 +232,10 @@ namespace matrices
         return u1*v1 + u2*v2 + u3*v3;
     }
 
+    inline glm::vec4 normalize(glm::vec4 v) {
+        return v / norm(v);
+    }
+
     // Matriz de mudança de coordenadas para o sistema de coordenadas da Câmera.
     inline glm::mat4 Matrix_Camera_View(glm::vec4 position_c, glm::vec4 view_vector, glm::vec4 up_vector)
     {

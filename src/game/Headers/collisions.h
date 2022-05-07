@@ -5,7 +5,7 @@
 #include "matrices.h"
 #include <math.h> 
 
-bool CollisionCubePoint(GameObject cubeObject, GameObject planObject);
+bool CollisionCubePlane(GameObject cubeObject, GameObject planeObject);
 bool CollisionCubeCube(GameObject cubeObjectOne, GameObject cubeObjectTwo);
 bool CollisionCubeSphere(GameObject cubeObject, GameObject sphereObject);
 

@@ -3,51 +3,42 @@
 glm::vec4 convertPointToObjPosition(GameObject obj, glm::vec3 point) {
     glm::mat4 pos = matrices::Matrix_Translate(obj.position.x, obj.position.y, obj.position.z);
     glm::mat4 sca = matrices::Matrix_Scale(obj.scale.x, obj.scale.y, obj.scale.z);
-    glm::mat4 rot = matrices::Matrix_Rotate_X(obj.rotation.x)*
-                        matrices::Matrix_Rotate_Y(obj.rotation.y)*
-                        matrices::Matrix_Rotate_Z(obj.rotation.z);
 
     glm::vec4 vec4Point(point.x, point.y, point.z, 1.0);
 
-    return pos*sca*rot*vec4Point;
+    return pos*sca*vec4Point;
 }
 
-bool CollisionCubePoint(GameObject cube, GameObject plane) {
+bool CollisionCubePlane(GameObject cube, GameObject plane) {
     glm::vec4 cubeMin = convertPointToObjPosition(cube, cube.model.bbox_min);
     glm::vec4 cubeMax = convertPointToObjPosition(cube, cube.model.bbox_max);
+    glm::vec4 planeMin = convertPointToObjPosition(plane, plane.model.bbox_min);
+
+    glm::vec4 cubeCenter = matrices::component_wise_division((cubeMax + cubeMin), 2.0);
+    glm::vec4 extents = cubeMax - cubeCenter;
 
     auto model = plane.model;
-    
-    for (size_t shape = 0; shape < model.shapes.size(); ++shape)
-    {
-        size_t num_triangles = model.shapes[shape].mesh.num_face_vertices.size();
+    auto planeNormal = matrices::normalize(
+        convertPointToObjPosition(
+            plane, 
+            glm::vec3(
+                model.attrib.normals[0], 
+                model.attrib.normals[1], 
+                model.attrib.normals[2]
+            )
+        )
+    );
 
-        for (size_t triangle = 0; triangle < num_triangles; ++triangle)
-        {
-            assert(model.shapes[shape].mesh.num_face_vertices[triangle] == 3);
-            
-            for (size_t vertex = 0; vertex < 3; ++vertex)
-            {
-                tinyobj::index_t idx = model.shapes[shape].mesh.indices[3*triangle + vertex];
+    float r = extents.x * abs(planeNormal.x) + 
+        extents.y * abs(planeNormal.y) + 
+        extents.z * abs(planeNormal.z);
 
-                const float vx = model.attrib.vertices[3*idx.vertex_index + 0];
-                const float vy = model.attrib.vertices[3*idx.vertex_index + 1];
-                const float vz = model.attrib.vertices[3*idx.vertex_index + 2];
+    planeNormal[3] = 0.0f;
+    cubeCenter[3] = 0.0f;
 
-                glm::vec4 point = convertPointToObjPosition(plane, glm::vec3(vx, vy, vz));
-                
-                bool xCollision = point.x >= cubeMin.x && point.x <= cubeMax.x;
-                bool yCollision = point.y >= cubeMin.y && point.y <= cubeMax.y;
-                bool zCollision = point.z >= cubeMin.z && point.z <= cubeMin.z;
-                
-                if (xCollision && yCollision && zCollision) {
-                    return true;
-                }
-            }
-        }
-    }
+    float s = matrices::dotproduct(planeNormal, cubeCenter) - 9.6;
 
-    return false;
+    return abs(s) <= r;
 }
 
 // Calcula se a bouding box do primeiro parâmetro tem colisão com a 
