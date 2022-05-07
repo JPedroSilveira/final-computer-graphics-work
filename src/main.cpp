@@ -249,7 +249,7 @@ int main(int argc, char* argv[])
     };
 
     // Game object chicken criado para facilitar a criação do player
-    GameObject* chicken = new GameObject("player", chickenmodel, glm::vec4(-7.0f,1.50f,0.0f,1.0f), glm::vec3(0.4f,0.4f,0.4f), glm::vec3(0,0,0));
+    GameObject* chicken = new GameObject("player", chickenmodel, glm::vec4(-7.0f,0.0f,0.0f,1.0f), glm::vec3(0.4f,0.4f,0.4f), glm::vec3(0,0,0));
     chicken->type=MATERIAL;
     chicken->object_type=OBJ_TYPE::PLAYER;
     Player player(*chicken, true, 1.2f);
@@ -277,6 +277,7 @@ int main(int argc, char* argv[])
         glm::vec4 p3 = bunnyBezierPoints[bunnyCount][3];
         NPC* bunny = new NPC(*bunnyGO,0,0.1,p0,p1,p2,p3);
         delete bunnyGO;
+
         objects.push_back(bunny);
         npcs.push_back(bunny);
         bunnyCount++;
@@ -294,9 +295,9 @@ int main(int argc, char* argv[])
     for (auto eggGo : eggGos) {
         eggGo->type=MATERIAL;
         eggGo->object_type=OBJ_TYPE::PLAYER_TARGET;
+        PlayerTarget* egg = new PlayerTarget(*eggGo,false);
         delete eggGo;
 
-        PlayerTarget* egg = new PlayerTarget(*eggGo,false);
         objects.push_back(egg);
         targets.push_back(egg);
     }
@@ -402,7 +403,7 @@ int main(int argc, char* argv[])
             float z = r*cos(g_CameraPhi)*cos(g_CameraTheta) + p.z;
             float x = r*cos(g_CameraPhi)*sin(g_CameraTheta) + p.x;
             
-            glm::vec4 lookat_offset      = glm::vec4(0.0f, 2.0f, 0.0f, 0.0f);
+            glm::vec4 lookat_offset      = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
             glm::vec4 camera_lookat_l    = p + lookat_offset; // Ponto "l", para onde a câmera (look-at) estará sempre olhando
             camera_position_c            = glm::vec4(x,y,z,1.0f); // Ponto "c", centro da câmera
             camera_view_vector           = camera_lookat_l - camera_position_c; // Vetor "view", sentido para onde a câmera está virada
