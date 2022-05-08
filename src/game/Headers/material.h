@@ -23,7 +23,7 @@ struct Material {
 const Material base_material {
     glm::vec3(0.3,0.3,0.3),
     glm::vec3(0.3,0.3,0.3),
-    glm::vec3(0.3,0.3,0.3),
+    glm::vec3(0.2,0.2,0.2),
     32
 };
 

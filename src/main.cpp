@@ -215,9 +215,9 @@ int main(int argc, char* argv[])
     LoadShadersFromFiles();
 
     // Carregamos duas imagens para serem utilizadas como textura
-    LoadTextureImage("../../data/grass.jpg", GL_REPEAT);      // Grass
-    LoadTextureImage("../../data/green_wall.jpg", GL_REPEAT);  // GreenWall
-    LoadTextureImage("../../data/chicken.jpeg", GL_CLAMP_TO_BORDER);  // Chicken
+    LoadTextureImage("./data/grass.jpg", GL_REPEAT);      // Grass
+    LoadTextureImage("./data/green_wall.jpg", GL_REPEAT);  // GreenWall
+    LoadTextureImage("./data/chicken.jpeg", GL_CLAMP_TO_BORDER);  // Chicken
 
     // Mapeamos as teclas de movimento
     std::map<POSSIBLE_MOV, bool*> player_keys;
@@ -227,19 +227,19 @@ int main(int argc, char* argv[])
     player_keys.emplace(LEFT, &g_a_down);
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
-    GameModel chickenmodel("../../data/chicken.obj", "chicken");
+    GameModel chickenmodel("./data/chicken.obj", "chicken");
     ComputeNormals(&chickenmodel);
     BuildTrianglesAndAddToVirtualScene(&chickenmodel);
 
-    GameModel bunnymodel("../../data/bunny.obj", "bunny");
+    GameModel bunnymodel("./data/bunny.obj", "bunny");
     ComputeNormals(&bunnymodel);
     BuildTrianglesAndAddToVirtualScene(&bunnymodel);
 
-    GameModel planemodel("../../data/plane.obj", "plane");
+    GameModel planemodel("./data/plane.obj", "plane");
     ComputeNormals(&planemodel);
     BuildTrianglesAndAddToVirtualScene(&planemodel);
 
-    GameModel eggmodel("../../data/egg.obj", "egg");
+    GameModel eggmodel("./data/egg.obj", "egg");
     ComputeNormals(&eggmodel);
     BuildTrianglesAndAddToVirtualScene(&eggmodel);
 
@@ -279,7 +279,7 @@ int main(int argc, char* argv[])
     Material bunny_mat {
         glm::vec3(0.8,0.0,0.0), // Kd - termo difuso (lambert)
         glm::vec3(0.4,0.4,0.4), // Ks
-        glm::vec3(0.4,0.4,0.4), // Ka - luz ambiente
+        glm::vec3(0.2,0.2,0.2), // Ka - luz ambiente
         32                      // q
     };
 
@@ -449,6 +449,7 @@ int main(int argc, char* argv[])
         } 
         // Modo Free-View: a camera sempre aponta para o sentido do movimento
         else {
+            camera_position_c  = player.position;
             camera_view_vector = player.move_direction;
         }
         
@@ -656,8 +657,8 @@ void LoadShadersFromFiles()
     //       |
     //       o-- shader_fragment.glsl
     //
-    vertex_shader_id = LoadShader_Vertex("../../src/shader_vertex.glsl");
-    fragment_shader_id = LoadShader_Fragment("../../src/shader_fragment.glsl");
+    vertex_shader_id = LoadShader_Vertex("./shaders/shader_vertex.glsl");
+    fragment_shader_id = LoadShader_Fragment("./shaders/shader_fragment.glsl");
 
     // Deletamos o programa de GPU anterior, caso ele exista.
     if ( program_id != 0 )
@@ -1524,6 +1525,7 @@ void PrintObjModelInfo(GameModel* model)
     for (; it != itEnd; it++) {
       printf("  material.%s = %s\n", it->first.c_str(), it->second.c_str());
     }
+
     printf("\n");
   }
 }

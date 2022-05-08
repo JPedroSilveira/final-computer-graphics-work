@@ -17,4 +17,4 @@ clean:
 	rm -f bin/Linux/main
 
 run: ./bin/Linux/main
-	cd bin/Linux && ./main
+	cp ./bin/Linux/main ./release/main && cd ./release && ./main

@@ -329,7 +329,6 @@ void TextRendering_Win(GLFWwindow* window) {
     static char buffer[9] = "YOU WIN!";
 
     float lineheight = TextRendering_LineHeight(window);
-    float charwidth = TextRendering_CharWidth(window);
 
     TextRendering_PrintString(window, buffer, -0.925f, lineheight/2, 10.0f);
 }
