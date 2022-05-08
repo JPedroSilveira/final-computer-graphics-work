@@ -21,6 +21,7 @@ out vec4 normal;
 out vec2 texcoords;
 out vec4 color_v;
 
+// Veja o fragment_shader.glsl
 struct Material {
     vec3 Kd;
     vec3 Ks;
@@ -61,8 +62,10 @@ void main()
     // Coordenadas de textura obtidas do arquivo OBJ (se existirem!)
     texcoords = texture_coefficients;
     
+    // Define a cor de acordo com os vértices
     if (object_id == MATERIAL_GOURAUD)
     {
+        // Variáve
         vec4 l = normalize(vec4(1.0,1.0,0.5,0.0));
         vec4 n = normalize(normal);
         float lambert = max(0, dot(n,l));

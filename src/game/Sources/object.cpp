@@ -26,7 +26,9 @@ GameModel::~GameModel()
 
 GameObject::GameObject(std::string name, GameModel& model, glm::vec4 position, glm::vec3 scale, glm::vec3 rotation, GameObject* father)
  : name(name), model(model), position(position), scale(scale), rotation(rotation), move_direction(glm::vec4(1,0,0,0)),
-  father(father), material(base_material) {}
+  father(father), material(base_material) {
+      this->type = MATERIAL_GOURAUD;
+  }
 
 
 void GameObject::setMaterial(Material material)

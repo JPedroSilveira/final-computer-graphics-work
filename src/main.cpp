@@ -1,3 +1,19 @@
+/*
+    Galinha vs Coelhos da Páscoa do Mal
+    
+    Jogo desenvolvido por: 
+        - João Pedro Silveira e Silva
+        - Jordi Pujol Ricarte
+    
+    Foi utilizado como base o Lab 05 desenvolvido no semestre
+    Nenhum código pronto adicional foi utilizado.
+
+    Foram criados 3 arquivos *.[h/cpp] novos:
+        collisions -> implementa testes de colisão
+        object -> implementa objetos de jogo
+        material -> implementa estrura para definição de materiais (apenas .h)
+*/
+
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -199,9 +215,16 @@ int main(int argc, char* argv[])
     LoadShadersFromFiles();
 
     // Carregamos duas imagens para serem utilizadas como textura
-    LoadTextureImage("../../data/grass.jpg", GL_REPEAT);      // TextureImage0
-    LoadTextureImage("../../data/green_wall.jpg", GL_REPEAT);  // TextureImage1
-    LoadTextureImage("../../data/chicken.jpeg", GL_CLAMP_TO_BORDER);  // TextureImage2
+    LoadTextureImage("../../data/grass.jpg", GL_REPEAT);      // Grass
+    LoadTextureImage("../../data/green_wall.jpg", GL_REPEAT);  // GreenWall
+    LoadTextureImage("../../data/chicken.jpeg", GL_CLAMP_TO_BORDER);  // Chicken
+
+    // Mapeamos as teclas de movimento
+    std::map<POSSIBLE_MOV, bool*> player_keys;
+    player_keys.emplace(FRONT, &g_w_down);
+    player_keys.emplace(BACK, &g_s_down);
+    player_keys.emplace(RIGHT, &g_d_down);
+    player_keys.emplace(LEFT, &g_a_down);
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
     GameModel chickenmodel("../../data/chicken.obj", "chicken");
@@ -251,16 +274,8 @@ int main(int argc, char* argv[])
     delete chicken; // GameObject chicken deixa de existir aqui
     objects.push_back(&player);
     
-    std::vector<GameObject*> bunnyGOs = {
-        new GameObject("enemy0", bunnymodel, glm::vec4(0.0f,0.0f,0.0f,1.0f), glm::vec3(0.6f,0.6f,0.6f), glm::vec3(0,0,0)),
-        new GameObject("enemy1", bunnymodel, glm::vec4(0.0f,0.0f,0.0f,1.0f), glm::vec3(0.6f,0.6f,0.6f), glm::vec3(0,0,0))
-    };
-
-    std::vector<std::vector<glm::vec4>> bunnyBezierPoints = {
-        {glm::vec4(-8,1,-8,1), glm::vec4(-5,1,8,1),  glm::vec4(5,1,8,1), glm::vec4(8,1,-8,1)},
-        {glm::vec4(9,1,9,1), glm::vec4(-9,1,4.5,1), glm::vec4(9,1,-4.5,1), glm::vec4(-9,1,-9,1)}
-    };
-
+    // Criando o coelhos da páscoa do mal
+    // Material do coelho (vermelho = diabo >:D)
     Material bunny_mat {
         glm::vec3(0.8,0.0,0.0), // Kd - termo difuso (lambert)
         glm::vec3(0.4,0.4,0.4), // Ks
@@ -268,6 +283,23 @@ int main(int argc, char* argv[])
         32                      // q
     };
 
+    // Vetor de GameObject com varios coelhos (a posição não importa
+    // porque ele será transportado para o começo do caminho de bezier)
+    glm::vec4 out_of_the_game(-20,-20,-20,1);
+    glm::vec3 bunny_scale(0.6f,0.6f,0.6f);
+    std::vector<GameObject*> bunnyGOs = {
+        new GameObject("enemy0", bunnymodel, out_of_the_game, bunny_scale),
+        new GameObject("enemy1", bunnymodel, out_of_the_game, bunny_scale)
+    };
+
+    // Definindo os pontos no mapa que traçam o caminho de bezier pro coelho
+    std::vector<std::vector<glm::vec4>> bunnyBezierPoints = {
+        {glm::vec4(-8,1,-8,1), glm::vec4(-5,1,8,1),  glm::vec4(5,1,8,1), glm::vec4(8,1,-8,1)},
+        {glm::vec4(9,1,9,1), glm::vec4(-9,1,4.5,1), glm::vec4(9,1,-4.5,1), glm::vec4(-9,1,-9,1)}
+    };
+
+    // Aqui, convertemos os GameObjects em NPCs, traçando o caminho deles usando
+    // curvas de bezier
     int bunnyCount = 0;
     for (auto bunnyGO : bunnyGOs) {
         bunnyGO->material = bunny_mat;
@@ -285,6 +317,7 @@ int main(int argc, char* argv[])
         bunnyCount++;
     }
 
+    // Adicionamos os ovos fazendo o mesmo processo dos coelhos
     auto eggSize = glm::vec3(0.15f,0.15f,0.15f);
     std::vector<GameObject*> eggGos = {
         new GameObject("egg1", eggmodel, glm::vec4(-3.0f,0.30f,0.0f,1.0f), eggSize, glm::vec3(0,0,0)),
@@ -295,15 +328,8 @@ int main(int argc, char* argv[])
         new GameObject("egg6", eggmodel, glm::vec4(0.0f,0.30f,8.0f,1.0f), eggSize, glm::vec3(0,0,0))
     };
 
-    std::vector<int> eggMaterial = {
-        MATERIAL_GOURAUD, MATERIAL_GOURAUD, 
-        MATERIAL_GOURAUD, MATERIAL_GOURAUD, 
-        MATERIAL_GOURAUD, MATERIAL_GOURAUD
-    };
-
     int eggCount = 0;
     for (auto eggGo : eggGos) {
-        eggGo->type=eggMaterial[eggCount];
         eggGo->object_type=OBJ_TYPE::PLAYER_TARGET;
         PlayerTarget* egg = new PlayerTarget(*eggGo,false);
         delete eggGo;
@@ -313,6 +339,7 @@ int main(int argc, char* argv[])
         ++eggCount;
     }
 
+    // Criamos os objetos estáticos (paredes, chão, vaca)
     GameObject floor("floor", planemodel, glm::vec4(0,-0.1,0,0), glm::vec3(10,1,10), glm::vec3(0,0,0));
     floor.type=GRASS;
     floor.object_type=OBJ_TYPE::STATIC;
@@ -341,19 +368,14 @@ int main(int argc, char* argv[])
     wallLeft.object_type=OBJ_TYPE::STATIC;
     walls.push_back(&wallLeft);
     objects.push_back(&wallLeft);
-
-    std::map<POSSIBLE_MOV, bool*> player_keys;
-    player_keys.emplace(FRONT, &g_w_down);
-    player_keys.emplace(BACK, &g_s_down);
-    player_keys.emplace(RIGHT, &g_d_down);
-    player_keys.emplace(LEFT, &g_a_down);
     
-    float prev_time = (float)glfwGetTime();
 
+    // Variaveis de controle de fluxo do jogo
     bool gameover = false;
     bool win = false;
     int score = 0;
 
+    float prev_time = (float)glfwGetTime();
     while (!glfwWindowShouldClose(window))
     {
         // Aqui atualizamos os valores do que deve ser atualizado
@@ -362,10 +384,9 @@ int main(int argc, char* argv[])
         float delta_t = current_time - prev_time;
         prev_time = current_time;
 
-        player.can_move = true;
-
         // Aqui, atualizamos as posições dos npcs
-        // e verificamos colisões com o player
+        // e verificamos colisões com o player por teste Cubo-Cubo
+        player.can_move = true;
         for (auto npc : npcs)
         {
             if (CollisionCubeCube(player, *npc)) {
@@ -376,7 +397,7 @@ int main(int argc, char* argv[])
             }
         }
 
-        // Aqui verificamos se um alvo foi capturado por teste de colisão
+        // Aqui verificamos se um alvo foi capturado por teste de colisão Cubo-Esfera
         for (auto target : targets)
         {
             if (CollisionCubeSphere(player, *target)) {
@@ -385,13 +406,14 @@ int main(int argc, char* argv[])
         }
 
         // Aqui vertificamos se o player não está saindo do mapa
-        // por teste de colisão com as paredes
+        // por teste de colisão com as paredes (Cubo-Plano)
         for (auto wall : walls)
         {
             if (CollisionCubePlane(player, *wall)) {
                 player.can_move = false;
             }
         }
+
 
         if (!gameover && !win) {
             player.updateMovement(player_keys, delta_t);
@@ -401,28 +423,36 @@ int main(int argc, char* argv[])
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glUseProgram(program_id);
 
-        glm::vec4 p = player.position;
+        // Aqui, atualizamos a camera
+
+        glm::vec4 p = player.position; // Só pra encurtar o código mesmo
         glm::vec4 camera_position_c; // Ponto "c", centro da câmera
         glm::vec4 camera_view_vector; // Vetor "view", sentido para onde a câmera está virada
         glm::vec4 camera_up_vector = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eito Y global)
 
+        // Modo Look-At
         if (g_UseLookAt) {
-            // Valores de câmera
+            // Caso camera travada, atualizamos o plano XZ pra travar na bunda da galinha
             if (g_lockCamera)
                 g_CameraTheta = - M_PI_2 - player.move_angle;
+
+            // Calcula ponto da câmera
             float r = g_CameraDistance;
             float y = r*sin(g_CameraPhi) + p.y;
             float z = r*cos(g_CameraPhi)*cos(g_CameraTheta) + p.z;
             float x = r*cos(g_CameraPhi)*sin(g_CameraTheta) + p.x;
-            
+
+            camera_position_c            = glm::vec4(x,y,z,1.0f); // Ponto "c", centro da câmera
             glm::vec4 lookat_offset      = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
             glm::vec4 camera_lookat_l    = p + lookat_offset; // Ponto "l", para onde a câmera (look-at) estará sempre olhando
-            camera_position_c            = glm::vec4(x,y,z,1.0f); // Ponto "c", centro da câmera
             camera_view_vector           = camera_lookat_l - camera_position_c; // Vetor "view", sentido para onde a câmera está virada
-        } else {
+        } 
+        // Modo Free-View: a camera sempre aponta para o sentido do movimento
+        else {
             camera_view_vector = player.move_direction;
         }
-
+        
+        // Aqui, criamos a matriz de projeção
         glm::mat4 view = Matrix_Camera_View(camera_position_c, camera_view_vector, camera_up_vector);
 
         glm::mat4 projection;
@@ -457,6 +487,8 @@ int main(int argc, char* argv[])
                     continue;
                 }
             }
+
+            // Define a matriz model
             glm::mat4 pos = matrices::Matrix_Translate(obj->position.x, obj->position.y, obj->position.z);
             glm::mat4 sca = matrices::Matrix_Scale(obj->scale.x, obj->scale.y, obj->scale.z);
             glm::mat4 rot = matrices::Matrix_Rotate_X(obj->rotation.x)*
@@ -478,6 +510,7 @@ int main(int argc, char* argv[])
         }
         TextRendering_ShowFramesPerSecond(window);
 
+        // Contagem de pontos
         score = 0;
         for (auto target : targets)
         {    
@@ -490,6 +523,7 @@ int main(int argc, char* argv[])
             win = true;
         }
 
+        // Rederização dos textos
         TextRendering_PrintScore(window, score);
 
         if (gameover) {
@@ -641,6 +675,8 @@ void LoadShadersFromFiles()
     object_id_uniform       = glGetUniformLocation(program_id, "object_id"); // Variável "object_id" em shader_fragment.glsl
     bbox_min_uniform        = glGetUniformLocation(program_id, "bbox_min");
     bbox_max_uniform        = glGetUniformLocation(program_id, "bbox_max");
+
+    // Defindo as variáveis do shader_fragment pra imluminação
     kd_uniform              = glGetUniformLocation(program_id, "material.Kd");
     ks_uniform              = glGetUniformLocation(program_id, "material.Ks");
     ka_uniform              = glGetUniformLocation(program_id, "material.Ka");

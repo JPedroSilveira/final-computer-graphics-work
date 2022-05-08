@@ -884,20 +884,6 @@
 1651951769 /home/jordi/Documentos/Semestre/FCG/Chicken/include/glm/gtc/type_ptr.inl
 	<cstring>
 
-1651951769 /home/jordi/Documentos/Semestre/FCG/Chicken/include/utils.h
-	<cstdio>
-
-1651953693 /home/jordi/Documentos/Semestre/FCG/Chicken/include/matrices.h
-	<cstdio>
-	<cstdlib>
-	<glm/mat4x4.hpp>
-	<glm/vec4.hpp>
-	<glm/gtc/matrix_transform.hpp>
-
-1649270085 /home/jordi/Documentos/Semestre/FCG/Chicken/include/object.h
-	<tiny_obj_loader.h>
-	<vector>
-
 1651951769 /home/jordi/Documentos/Semestre/FCG/Chicken/include/tiny_obj_loader.h
 	<map>
 	<string>
@@ -911,22 +897,6 @@
 	<utility>
 	<fstream>
 	<sstream>
-
-1651953693 source:/home/jordi/Documentos/Semestre/FCG/Chicken/src/textrendering.cpp
-	<string>
-	<glad/glad.h>
-	<GLFW/glfw3.h>
-	<glm/mat4x4.hpp>
-	<glm/vec4.hpp>
-	"utils.h"
-	"dejavufont.h"
-
-1651951769 /home/jordi/Documentos/Semestre/FCG/Chicken/include/dejavufont.h
-	<stddef.h>
-	<stdint.h>
-
-1651951769 source:/home/jordi/Documentos/Semestre/FCG/Chicken/src/tiny_obj_loader.cpp
-	"tiny_obj_loader.h"
 
 1651951769 /home/jordi/Documentos/Semestre/FCG/Chicken/include/stb_image.h
 	"stb_image.h"
@@ -943,6 +913,16 @@
 	<emmintrin.h>
 	<intrin.h>
 	<arm_neon.h>
+
+1651951769 /home/jordi/Documentos/Semestre/FCG/Chicken/include/utils.h
+	<cstdio>
+
+1651953693 /home/jordi/Documentos/Semestre/FCG/Chicken/include/matrices.h
+	<cstdio>
+	<cstdlib>
+	<glm/mat4x4.hpp>
+	<glm/vec4.hpp>
+	<glm/gtc/matrix_transform.hpp>
 
 1651963987 /home/jordi/Documentos/Semestre/FCG/Chicken/src/game/Headers/object.h
 	<cstdio>
@@ -962,4 +942,20 @@
 	"object.h"
 	"matrices.h"
 	<math.h>
+
+1651953693 source:/home/jordi/Documentos/Semestre/FCG/Chicken/src/textrendering.cpp
+	<string>
+	<glad/glad.h>
+	<GLFW/glfw3.h>
+	<glm/mat4x4.hpp>
+	<glm/vec4.hpp>
+	"utils.h"
+	"dejavufont.h"
+
+1651951769 /home/jordi/Documentos/Semestre/FCG/Chicken/include/dejavufont.h
+	<stddef.h>
+	<stdint.h>
+
+1651951769 source:/home/jordi/Documentos/Semestre/FCG/Chicken/src/tiny_obj_loader.cpp
+	"tiny_obj_loader.h"
 

@@ -31,11 +31,12 @@ uniform vec4 bbox_max;
 
 uniform int object_id;
 
+// Texturas utilizadas
 uniform sampler2D Grass;
 uniform sampler2D GreenWall;
 uniform sampler2D Chicken;
 
-// Caso de usar material, recebe esses valores do Modelo
+// Caso de use material, recebe esses valores do Modelo
 struct Material {
     vec3 Kd;
     vec3 Ks;
@@ -43,6 +44,7 @@ struct Material {
     float q;
 };
 
+// Material recebido pelo programa
 uniform Material material;
 
 // O valor de saída ("out") de um Fragment Shader é a cor final do fragmento.
@@ -67,26 +69,26 @@ void main()
     vec4 n = normalize(normal);
 
     // Vetor que define o sentido da fonte de luz em relação ao ponto atual.
-    // TODO: alterar para isso seja parametrizado
     vec4 l = normalize(vec4(1.0,1.0,0.5,0.0));
 
     // Vetor que define o sentido da câmera em relação ao ponto atual.
     vec4 v = normalize(camera_position - p);
 
+    // Vetor h para modelo de blinn-phong
     vec4 h = normalize(l + v);
+
+    // Espectro da fonte de iluminação
+    vec3 I = vec3(1.0,1.0,1.0);
+    // Espectro da luz ambiente
+    vec3 Ia = vec3(0.1, 0.1, 0.1);
 
     if (object_id == MATERIAL)
     {
-        // Vetor que define o sentido da reflexão especular ideal.
-        // Espectro da fonte de iluminação
-        vec3 I = vec3(1.0,1.0,1.0);
-        // Espectro da luz ambiente
-        vec3 Ia = vec3(0.2, 0.2, 0.2);
         // Termo difuso utilizando a lei dos cossenos de Lambert
         vec3 lambert_diffuse_term = material.Kd * I * max(0, dot(n, l));
         // Termo ambiente
         vec3 ambient_term = material.Ka * Ia;
-        // Termo especular utilizando o modelo de iluminação de Phong
+        // Termo especular utilizando o modelo de iluminação de Blinn-Phong
         vec3 phong_specular_term  = material.Ks * I * pow(max(0, dot(h, n)), material.q);
         // Alpha
         color.a = 1;
@@ -94,6 +96,7 @@ void main()
         // especular, e ambiente. Veja slide 129 do documento Aula_17_e_18_Modelos_de_Iluminacao.pdf.
         color.rgb = lambert_diffuse_term + ambient_term + phong_specular_term;
     }
+    // Chão por UV Mapping
     else if (object_id == GRASS)
     {
         // Coordenadas de textura do plano, obtidas do arquivo OBJ.
@@ -107,6 +110,7 @@ void main()
         color.rgb = Kd0 * (lambert + 0.01);
         color.a = 1;
     }
+    // Parede por UV mapping
     else if (object_id == WALL)
     {
         // Coordenadas de textura do plano, obtidas do arquivo OBJ.
@@ -120,6 +124,9 @@ void main()
         color.rgb = Kd0 * (lambert + 0.5);
         color.a = 1;
     }
+    // Galinha por UV Mapping
+    // mistura mapeamento de textura com blinn-phong
+    // para dar um aspecto brilhante nas penas
     else if (object_id == CHICKEN)
     {
         // Coordenadas de textura do plano, obtidas do arquivo OBJ.
@@ -127,10 +134,15 @@ void main()
         float V = texcoords.y;
         // Obtemos a refletância difusa a partir da leitura da imagem TextureImage0
         vec3 Kd0 = texture(Chicken, vec2(U,V)).rgb;
-        float lambert = max(0,dot(n,l));
-        color.rgb = Kd0 * (lambert + 0.5);
+        vec3 lambert_diffuse_term = Kd0 * (max(0,dot(n,l)));
+
+        vec3 ambient_term = material.Ka * Ia;
+        // Termo especular utilizando o modelo de iluminação de Blinn-Phong
+        vec3 phong_specular_term  = material.Ks * I * pow(max(0, dot(h, n)), material.q);
+        color.rgb = lambert_diffuse_term + ambient_term + phong_specular_term;
         color.a = 1;
     }
+    // Material padrão: puxa cor do vertex shader
     else // if (object_id == MATERIAL_GOURAUD) ou sem definir
     {
         color = color_v;
